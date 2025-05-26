@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebEditor", "WebEditor.csproj", "{3D0CACC8-669E-4ADE-9CCF-1CC318F50108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Common\Common.csproj", "{FD247AB6-ACA1-439E-A885-50D6BB9C5BBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester", "..\Tester\Tester.csproj", "{53C381A8-1BC1-4199-8D21-B369394ECE18}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D0CACC8-669E-4ADE-9CCF-1CC318F50108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D0CACC8-669E-4ADE-9CCF-1CC318F50108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D0CACC8-669E-4ADE-9CCF-1CC318F50108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D0CACC8-669E-4ADE-9CCF-1CC318F50108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD247AB6-ACA1-439E-A885-50D6BB9C5BBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD247AB6-ACA1-439E-A885-50D6BB9C5BBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD247AB6-ACA1-439E-A885-50D6BB9C5BBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD247AB6-ACA1-439E-A885-50D6BB9C5BBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53C381A8-1BC1-4199-8D21-B369394ECE18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53C381A8-1BC1-4199-8D21-B369394ECE18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53C381A8-1BC1-4199-8D21-B369394ECE18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53C381A8-1BC1-4199-8D21-B369394ECE18}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2B24BAD0-8285-4C9E-ABEF-85F6163F9239}
+	EndGlobalSection
+EndGlobal
