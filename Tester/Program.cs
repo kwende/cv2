@@ -18,7 +18,16 @@ namespace Tester
 
                 if (header.Magic == Constants.Magic)
                 {
+                    // cpu-accessible program bank
+                    fin.Seek(header.PrgROMSize * 0x4000, SeekOrigin.Current);
 
+                    // ppu-accessibl chr bank w/ nametables, etc. 
+                    // chr comes in two banks: first for backgrounds, second for sprites. 
+                    byte[] chrBank0 = new byte[header.ChrROMSize * 0x2000];
+                    byte[] chrBank1 = new byte[header.ChrROMSize * 0x2000];
+
+                    fin.Read(chrBank0, 0, chrBank0.Length);
+                    fin.Read(chrBank1, 0, chrBank1.Length);
                 }
             }
         }
