@@ -10,28 +10,43 @@
 
 <div class="container-fluid mt-4">
     <div class="row">
+        <div class="col-12 mb-4">
+            <MudText Typo="Typo.h6">1) Upload CV2 ROM</MudText>
+            <MudFileUpload Accept=".nes" T="IBrowserFile" FilesChanged="UploadFiles">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@Icons.Material.Filled.CloudUpload">
+                        Upload Files
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+            <MudText Class="mt-3" Typo="Typo.subtitle1">@RomName</MudText>
+        </div>
+    </div>
+    <div class="row">
         <!-- Palette Panel -->
         <div class="col-md-5">
             <MudPaper Class="p-3">
-                <MudText Typo="Typo.h6">Palette Selection</MudText>
+                <MudText Typo="Typo.h6">2) Choose 4 colors from palette</MudText>
                 <div class="palette-grid mt-2">
                     @* Loop through NES palette colors *@
                     @foreach (var color in NesPalette)
                     {
                         <div class="color-cell no-select" style="background-color:@color" 
-                            @onclick="() => OnPaletteColorClick(color)"></div>
+                        @onclick="() => OnAddToPaletteClick(color)"></div>
                     }
                 </div>
 
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Selected Colors</MudText>
+                <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
                 <div class="selected-colors d-flex mt-1">
                     @for (int i = 0; i < 4; i++)
                     {
                         var color = SelectedColors[i]; 
                         var index = i;
-                        <div class="selected-color-cell no-select" 
-                            @onclick="()=>OnSelectedColorClick(color, index)" 
-                            style="background-color:@(SelectedColors[i] ?? "#ffffff")"></div>
+                        <div class="selected-color-cell no-select @(_selectedPaletteIndex == index && _selectedPaletteClicked ? "selected-palette" : "")"
+                        @onclick="()=>OnSelectedColorClick(color, index)" 
+                        style="background-color:@(SelectedColors[i] ?? "#ffffff")"></div>
                     }
                 </div>
             </MudPaper>
@@ -40,7 +55,7 @@
         <!-- Canvas Panel -->
         <div class="col-md-7" @onpointerup="()=>{_isDrawing = false;}">
             <MudPaper Class="p-3">
-                <MudText Typo="Typo.h6">Sprite Canvas (16×16)</MudText>
+                <MudText Typo="Typo.h6">4) Draw sprite</MudText>
                 <div class="sprite-canvas mt-2">
                     @for (int y = 0; y < 16; y++)
                     {
@@ -50,76 +65,70 @@
                             var _y = y;
 
                             <div class="pixel no-select"
-                                 style="background-color:@GetPixelColor(x, y)"
-                                 @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
-                                @onclick="() => OnPixelClick(_x, _y)"
-                                @onpointerenter="()=>OnPaint(_x, _y)"></div>
+                            style="background-color:@GetPixelColor(x, y)"
+                            @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
+                            @onclick="() => OnPixelClick(_x, _y)"
+                            @onpointerenter="()=>OnPaint(_x, _y)"></div>
                         }
                     }
                 </div>
             </MudPaper>
         </div>
     </div>
-    <div class="row">
-        <div class="col-12">
-            <MudFileUpload Accept=".nes" T="IBrowserFile" FilesChanged="UploadFiles">
-                <ActivatorContent>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.CloudUpload">
-                        Upload Files
-                    </MudButton>
-                </ActivatorContent>
-            </MudFileUpload>
-        </div>
-    </div>
+
 </div>
 
 <style>
     /* Palette grid: 16 columns */
     .palette-grid {
-        display: grid;
-        grid-template-columns: repeat(16, 24px);
-        grid-gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(16, 24px);
+    grid-gap: 4px;
     }
     .color-cell {
-        width: 24px;
-        height: 24px;
-        border: 1px solid #444;
-        cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #444;
+    cursor: pointer;
     }
 
     .no-select {
-        /* Prevent any selection or caret showing up */
-        user-select: none; /* standard */
-        -webkit-user-select: none; /* Safari/Chrome */
-        -ms-user-select: none; /* IE/Edge */
-        /* Hide the blinking caret if focus does land there */
-        caret-color: transparent;
-        /* Remove the focus outline so nothing shows when you click */
-        outline: none;
+    /* Prevent any selection or caret showing up */
+    user-select: none; /* standard */
+    -webkit-user-select: none; /* Safari/Chrome */
+    -ms-user-select: none; /* IE/Edge */
+    /* Hide the blinking caret if focus does land there */
+    caret-color: transparent;
+    /* Remove the focus outline so nothing shows when you click */
+    outline: none;
     }
 
     /* Selected palette slots */
     .selected-colors .selected-color-cell {
-        width: 40px;
-        height: 40px;
-        border: 1px solid #444;
-        margin-right: 8px;
-        cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #444;
+    margin-right: 8px;
+    cursor: pointer;
+    }
+
+    .selected-palette{
+    border-color: black !important;
+    border-width: 3px!important;
+    border-radius:2px;
     }
 
     /* Sprite canvas: 16×16 pixels */
     .sprite-canvas {
-        display: grid;
-        grid-template-columns: repeat(16, 20px);
-        grid-template-rows: repeat(16, 20px);
+    display: grid;
+    grid-template-columns: repeat(16, 20px);
+    grid-template-rows: repeat(16, 20px);
     }
     .pixel {
-        width: 20px;
-        height: 20px;
-        border: 1px solid #ccc;
-        cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #ccc;
+    cursor: pointer;
     }
 </style>
 
@@ -191,10 +200,12 @@
         "#000000",
     };
 
-    protected int _selectedColorIndex = 0;
+    protected bool _selectedPaletteClicked = false; 
+    protected int _selectedPaletteIndex = 0;
     protected string _selectedColor = string.Empty;
     protected bool _isDrawing = false;
     protected NesROM _rom = new NesROM();
+    protected string RomName { get; set; } = string.Empty; 
 
     // Holds the four user-selected colors
     protected string[] SelectedColors = new string[4];
@@ -204,10 +215,46 @@
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
 
-    protected void OnPaletteColorClick(string color)
+    protected void OnAddToPaletteClick(string newColor)
     {
-        SelectedColors[_selectedColorIndex] = color; 
-        _selectedColorIndex = (_selectedColorIndex + 1) % 4;
+        // if full and color hasn't been clicked, don't overwrite. 
+        if (!SelectedColors.Any(n => string.IsNullOrEmpty(n)) && !_selectedPaletteClicked)
+        {
+            return; 
+        }
+
+        var currentColor = SelectedColors[_selectedPaletteIndex]; 
+        if(!string.IsNullOrEmpty(currentColor))
+        {
+            for(int y=0;y<16;y++)
+            {
+                for(int x=0;x<16;x++)
+                {
+                    if (SpriteData[x, y] == currentColor)
+                    {
+                        SpriteData[x, y] = newColor; 
+                    }
+                }
+            }
+
+            _selectedColor = newColor;
+        }
+        SelectedColors[_selectedPaletteIndex] = newColor;
+
+        int indexToJumpTo = -1; 
+        for (int i = 0; i < SelectedColors.Length;i++)
+        {
+            if(string.IsNullOrEmpty(SelectedColors[i]))
+            {
+                indexToJumpTo = i; 
+                break; 
+            }
+        }
+
+        if(indexToJumpTo > -1)
+        {
+            _selectedPaletteIndex = indexToJumpTo;
+        }
     }   
 
     protected async Task UploadFiles(IBrowserFile file)
@@ -218,12 +265,17 @@
         var sheets = _rom.GetSpriteSheets(); 
 
         var simonSheet1 = sheets[1]; 
+
+        RomName = $"{file.Name} successfully loaded.";
+
+        StateHasChanged(); 
     }
 
     protected void OnSelectedColorClick(string color, int index)
     {
-        _selectedColorIndex = index; 
+        _selectedPaletteIndex = index; 
         _selectedColor = color; 
+        _selectedPaletteClicked = true; 
     }
 
     private void OnPixelClick(int x, int y)
