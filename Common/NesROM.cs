@@ -7,7 +7,6 @@ namespace Common
     {
         private MemoryStream? _stream = null;
         private iNesHeader _iNesHeader;
-        private const int SpriteSizeInBytes = 8;
 
         private long _prgSize = 0, _chrSize = 0;
 
@@ -16,19 +15,7 @@ namespace Common
             _stream = new MemoryStream(275_000);
         }
 
-        public static List<SpriteSheet> Transform8x16(List<SpriteSheet> input)
-        {
-            List<SpriteSheet> ret = new List<SpriteSheet>();
-            for (int i = 0; i < 16 * 16; i += 2)
-            {
-                var first = input[i];
-                var second = input[i + 1];
-            }
-
-            return ret;
-        }
-
-        public List<List<SpriteSheet>> GetSpriteSheets()
+        public List<SpriteSheet> GetSpriteSheets(bool eightBySixteenMode)
         {
             if (_stream == null || _prgSize == 0 || _chrSize == 0)
             {
@@ -36,7 +23,7 @@ namespace Common
             }
             else
             {
-                List<List<SpriteSheet>> sheets = new List<List<SpriteSheet>>();
+                List<SpriteSheet> sheets = new List<SpriteSheet>();
                 _stream.Seek(_prgSize + 16, SeekOrigin.Begin);
 
                 byte[] chrBank = new byte[_chrSize];
@@ -45,27 +32,59 @@ namespace Common
 
                 // hack just for CV2 for now. 
                 int i = 0;
+
+                int rows = eightBySixteenMode ? 8 : 16;
+                int height = eightBySixteenMode ? 16 : 8;
+
                 for (int tileNumber = 0; tileNumber < 32; tileNumber++)
                 {
-                    var sheet = new List<SpriteSheet>();
+                    var sheet = new SpriteSheet
+                    {
+                        Height = 128,
+                        Width = 128,
+                        Sprites = new List<Sprite>(),
+                        SpriteHeight = height,
+                        SpriteWidth = 8,
+                    };
+
                     sheets.Add(sheet);
-                    // each tile is a 16x16 grid of sprites
-                    for (int y = 0; y < 16; y++)
+                    // each tile is a 16xwidth grid of sprites
+                    for (int y = 0; y < rows; y++)
                     {
                         for (int x = 0; x < 16; x++)
                         {
-                            var panel1 = new ReadOnlySpan<byte>(chrBank, i, SpriteSizeInBytes);
+                            var panel1 = new ReadOnlySpan<byte>(chrBank, i, 8);
                             i += 8;
-                            var panel2 = new ReadOnlySpan<byte>(chrBank, i, SpriteSizeInBytes);
+                            var panel2 = new ReadOnlySpan<byte>(chrBank, i, 8);
                             i += 8;
 
-                            int[] sheetData = new int[SpriteSizeInBytes * SpriteSizeInBytes];
-                            for (int _y = 0, k = 0; _y < SpriteSizeInBytes; _y++)
+                            if (eightBySixteenMode)
+                            {
+                                byte[] panel1Combined = new byte[16];
+                                byte[] panel2Combined = new byte[16];
+
+                                var panel3 = new ReadOnlySpan<byte>(chrBank, i, 8);
+                                i += 8;
+                                var panel4 = new ReadOnlySpan<byte>(chrBank, i, 8);
+                                i += 8;
+
+                                panel1.CopyTo(panel1Combined);
+                                panel2.CopyTo(panel2Combined);
+
+                                panel3.CopyTo(panel1Combined.AsSpan(panel1.Length));
+                                panel4.CopyTo(panel2Combined.AsSpan(panel2.Length));
+
+                                panel1 = new ReadOnlySpan<byte>(panel1Combined);
+                                panel2 = new ReadOnlySpan<byte>(panel2Combined);
+                            }
+
+                            int[] sheetData = new int[8 * height];
+                            for (int _y = 0; _y < height; _y++)
                             {
                                 var panel1Byte = panel1[_y];
                                 var panel2Byte = panel2[_y];
 
-                                for (int _x = 0; _x < SpriteSizeInBytes; _x++, k++)
+                                for (int _x = 0; _x < 8; _x++)
                                 {
                                     byte mask = (byte)(0x80 >> _x);
 
@@ -73,11 +92,18 @@ namespace Common
                                     int panel2Bit = (panel2Byte & mask) != 0 ? 1 : 0;
 
                                     int paletteIndex = (panel1Bit << 1) | panel2Bit;
-                                    sheetData[k] = paletteIndex;
+
+                                    var index = (_y * 8) + _x;
+                                    sheetData[index] = paletteIndex;
                                 }
                             }
 
-                            sheet.Add(new SpriteSheet(sheetData));
+                            sheet.Sprites.Add(new Sprite
+                            {
+                                Width = 8,
+                                Height = height,
+                                SheetData = sheetData,
+                            });
                         }
                     }
                 }

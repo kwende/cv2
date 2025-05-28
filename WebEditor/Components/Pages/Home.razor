@@ -260,15 +260,13 @@
     protected async Task UploadFiles(IBrowserFile file)
     {
         await file.OpenReadStream().CopyToAsync(_nesGameBytes);
-        await _rom.Load(_nesGameBytes); 
+        await _rom.Load(_nesGameBytes);
 
-        var sheets = _rom.GetSpriteSheets(); 
+        var sheets = _rom.GetSpriteSheets(true);
 
-        var simonSheet1 = sheets[1]; 
+        var simonSheet1 = sheets[1];
 
         RomName = $"{file.Name} successfully loaded.";
-
-        StateHasChanged(); 
     }
 
     protected void OnSelectedColorClick(string color, int index)
