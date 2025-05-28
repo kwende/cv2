@@ -91,7 +91,7 @@ namespace Common
                                     int panel1Bit = (panel1Byte & mask) != 0 ? 1 : 0;
                                     int panel2Bit = (panel2Byte & mask) != 0 ? 1 : 0;
 
-                                    int paletteIndex = (panel1Bit << 1) | panel2Bit;
+                                    int paletteIndex = (panel2Bit << 1) | panel1Bit;
 
                                     var index = (_y * 8) + _x;
                                     sheetData[index] = paletteIndex;

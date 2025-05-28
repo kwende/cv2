@@ -31,21 +31,28 @@
                 <MudText Typo="Typo.h6">2) Choose 4 colors from palette</MudText>
                 <div class="palette-grid mt-2">
                     @* Loop through NES palette colors *@
-                    @foreach (var color in NesPalette)
+                    @for(int i=0;i<NesColors.NesPalette.Length;i++)
                     {
+                        var color = NesColors.NesPalette[i]; 
+                        var index = NesColors.NesColorArrayIndexToColorCode(i); 
+
                         <div class="color-cell no-select" style="background-color:@color" 
-                        @onclick="() => OnAddToPaletteClick(color)"></div>
+                        @onclick="() => OnAddToPaletteClick(color, index)"></div>
                     }
                 </div>
 
                 <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
                 <div class="selected-colors d-flex mt-1">
-                    @for (int i = 0; i < 4; i++)
+                    <div class="background selected-color-cell no-select @(_selectedPaletteIndex == null ? "selected-palette" : "")"
+                    @onclick="()=>OnPaletteColorClicked(string.Empty, null, null)"></div>
+
+                    @for (int i = 0; i < 3; i++)
                     {
                         var color = SelectedColors[i]; 
+                        var selectedColorIndex = SelectedColorIndices[i]; 
                         var index = i;
-                        <div class="selected-color-cell no-select @(_selectedPaletteIndex == index && _selectedPaletteClicked ? "selected-palette" : "")"
-                        @onclick="()=>OnSelectedColorClick(color, index)" 
+                        <div class="selected-color-cell no-select @(_selectedPaletteIndex == index ? "selected-palette" : "")"
+                        @onclick="()=>OnPaletteColorClicked(color, index, selectedColorIndex)"
                         style="background-color:@(SelectedColors[i] ?? "#ffffff")"></div>
                     }
                 </div>
@@ -53,27 +60,31 @@
         </div>
 
         <!-- Canvas Panel -->
-        <div class="col-md-7" @onpointerup="()=>{_isDrawing = false;}">
-            <MudPaper Class="p-3">
-                <MudText Typo="Typo.h6">4) Draw sprite</MudText>
-                <div class="sprite-canvas mt-2">
-                    @for (int y = 0; y < 16; y++)
-                    {
-                        @for (int x = 0; x < 16; x++)
+        @if (SpritePaletteIndices != null)
+        {
+            <div class="col-md-7" @onpointerup="()=>{_isDrawing = false;}">
+                <MudPaper Class="p-3">
+                    <MudText Typo="Typo.h6">4) Draw sprite</MudText>
+                    <div class="sprite-canvas mt-2">
+                        @for (int y = 0, i=0; y < 16; y++)
                         {
-                            var _x = x; 
-                            var _y = y;
+                            @for (int x = 0; x < 16; x++, i++)
+                            {
+                                var _x = x; 
+                                var _y = y;
 
-                            <div class="pixel no-select"
-                            style="background-color:@GetPixelColor(x, y)"
-                            @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
-                            @onclick="() => OnPixelClick(_x, _y)"
-                            @onpointerenter="()=>OnPaint(_x, _y)"></div>
+                                <div class="@(SpritePaletteIndices[x,y] == null ? "background" : "") pixel no-select"
+                                style="background-color:@GetPixelColor(x, y)"
+                                @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
+                                @onclick="() => OnPixelClick(_x, _y)"
+                                @onpointerenter="()=>OnPaint(_x, _y)"></div>
+                            }
                         }
-                    }
-                </div>
-            </MudPaper>
-        </div>
+                    </div>
+                </MudPaper>
+            </div>
+        }
+
     </div>
 
 </div>
@@ -130,132 +141,112 @@
     border: 1px solid #ccc;
     cursor: pointer;
     }
+
+    .background {
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% 100%, auto;
+    }
 </style>
 
 @code {
-    protected string[] NesPalette = new string[64] {
-        "#7C7C7C",
-        "#0000FC",
-        "#0000BC",
-        "#4428BC",
-        "#940084",
-        "#A80020",
-        "#A81000",
-        "#881400",
-        "#503000",
-        "#007800",
-        "#006800",
-        "#005800",
-        "#004058",
-        "#000000",
-        "#000000",
-        "#000000",
-        "#BCBCBC",
-        "#0078F8",
-        "#0058F8",
-        "#6844FC",
-        "#D800CC",
-        "#E40058",
-        "#F83800",
-        "#E45C10",
-        "#AC7C00",
-        "#00B800",
-        "#00A800",
-        "#00A844",
-        "#008888",
-        "#000000",
-        "#000000",
-        "#000000",
-        "#F8F8F8",
-        "#3CBCFC",
-        "#6888FC",
-        "#9878F8",
-        "#F878F8",
-        "#F85898",
-        "#F87858",
-        "#FCA044",
-        "#F8B800",
-        "#B8F818",
-        "#58D854",
-        "#58F898",
-        "#00E8D8",
-        "#787878",
-        "#000000",
-        "#000000",
-        "#FCFCFC",
-        "#A4E4FC",
-        "#B8B8F8",
-        "#D8B8F8",
-        "#F8B8F8",
-        "#F8A4C0",
-        "#F0D0B0",
-        "#FCE0A8",
-        "#F8D878",
-        "#D8F878",
-        "#B8F8B8",
-        "#B8F8D8",
-        "#00FCFC",
-        "#F8D8F8",
-        "#000000",
-        "#000000",
-    };
 
-    protected bool _selectedPaletteClicked = false; 
-    protected int _selectedPaletteIndex = 0;
+
+    protected int? _selectedPaletteIndex = null;
     protected string _selectedColor = string.Empty;
     protected bool _isDrawing = false;
     protected NesROM _rom = new NesROM();
     protected string RomName { get; set; } = string.Empty; 
 
     // Holds the four user-selected colors
-    protected string[] SelectedColors = new string[4];
+    protected string[] SelectedColors = new string[3];
+    protected int[] SelectedColorIndices = new int[3]; 
 
     // 16×16 grid storing each pixel's color (hex code)
     protected string[,] SpriteData = new string[16, 16];
+    protected int?[,] SpritePaletteIndices = new int?[16,16]; 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
 
-    protected void OnAddToPaletteClick(string newColor)
+    protected void OnAddToPaletteClick(string newColor, int index)
     {
-        // if full and color hasn't been clicked, don't overwrite. 
-        if (!SelectedColors.Any(n => string.IsNullOrEmpty(n)) && !_selectedPaletteClicked)
+        if(_selectedPaletteIndex == null)
         {
-            return; 
+            _selectedPaletteIndex = 0; 
         }
 
-        var currentColor = SelectedColors[_selectedPaletteIndex]; 
+        var selectedPaletteIndex = _selectedPaletteIndex.Value; 
+
+        var currentColor = SelectedColors[selectedPaletteIndex];
+
         if(!string.IsNullOrEmpty(currentColor))
         {
             for(int y=0;y<16;y++)
             {
                 for(int x=0;x<16;x++)
                 {
-                    if (SpriteData[x, y] == currentColor)
+                    if (SpritePaletteIndices[x, y] == selectedPaletteIndex)
                     {
                         SpriteData[x, y] = newColor; 
                     }
                 }
             }
-
-            _selectedColor = newColor;
-        }
-        SelectedColors[_selectedPaletteIndex] = newColor;
-
-        int indexToJumpTo = -1; 
-        for (int i = 0; i < SelectedColors.Length;i++)
-        {
-            if(string.IsNullOrEmpty(SelectedColors[i]))
-            {
-                indexToJumpTo = i; 
-                break; 
-            }
         }
 
-        if(indexToJumpTo > -1)
-        {
-            _selectedPaletteIndex = indexToJumpTo;
-        }
+        SelectedColors[selectedPaletteIndex] = newColor;
+        SelectedColorIndices[selectedPaletteIndex] = index;
+
+        _selectedPaletteIndex = selectedPaletteIndex;
+        _selectedColor = newColor; 
     }   
+
+    protected void LoadPalette(int[] palette)
+    {
+        for(int a=0;a<3;a++)
+        {
+            SelectedColors[a] = NesColors.NesColorCodeToColor(palette[a]);
+            SelectedColorIndices[a] = palette[a]; 
+        }
+    }
+
+    protected async Task LoadSprite(Sprite sprite1, Sprite sprite2)
+    {
+        await Task.Run(()=>
+        {
+            for (int y = 0; y < sprite1.Height; y++)
+            {
+                for (int x = 0; x < sprite1.Width; x++)
+                {
+                    var index = y * sprite1.Width + x;
+
+                    if(sprite1.SheetData[index] == 0)
+                    {
+                        SpriteData[x, y] = string.Empty;
+                        SpritePaletteIndices[x,y] = null; 
+                    }
+                    else
+                    {
+                        var sheetValue = sprite1.SheetData[index] -1; 
+                        SpriteData[x, y] = SelectedColors[sheetValue];
+                        SpritePaletteIndices[x, y] = sheetValue;
+                    }
+
+                    if (sprite2.SheetData[index] == 0)
+                    {
+                        SpriteData[x + sprite2.Width, y] = string.Empty;
+                        SpritePaletteIndices[x + sprite2.Width, y] = null;
+                    }
+                    else
+                    {
+                        var sheetValue = sprite2.SheetData[index] - 1;
+                        SpriteData[x + sprite2.Width, y] = SelectedColors[sheetValue];
+                        SpritePaletteIndices[x + sprite2.Width, y] = sheetValue;
+                    }
+                }
+            }
+        }); 
+    }
 
     protected async Task UploadFiles(IBrowserFile file)
     {
@@ -266,26 +257,55 @@
 
         var simonSheet1 = sheets[1];
 
+        // for demo of loading simon. 
+        var sprite1 = simonSheet1.Sprites[1];
+        var sprite2 = simonSheet1.Sprites[2];
+
+        LoadPalette(Constants.SimonPalette); 
+
+        await LoadSprite(sprite1, sprite2);
+
         RomName = $"{file.Name} successfully loaded.";
     }
 
-    protected void OnSelectedColorClick(string color, int index)
+    protected void OnPaletteColorClicked(string color, int? paletteIndex, int? nesColorIndex)
     {
-        _selectedPaletteIndex = index; 
+        _selectedPaletteIndex = paletteIndex; 
         _selectedColor = color; 
-        _selectedPaletteClicked = true; 
     }
 
     private void OnPixelClick(int x, int y)
     {
-        SpriteData[x, y] = _selectedColor;
+        if (_selectedColor != null)
+        {
+            if (_selectedPaletteIndex != null)
+            {
+                SpriteData[x, y] = _selectedColor;
+                SpritePaletteIndices[x, y] = _selectedPaletteIndex.Value;
+            }
+            else
+            {
+                SpriteData[x, y] = "transparent";
+                SpritePaletteIndices[x, y] = null;
+            }
+        }
+        
     }
 
     protected void OnPaint(int x, int y)
     {
-        if(_isDrawing)
+        if(_isDrawing && _selectedColor != null)
         {
-            SpriteData[x, y] = _selectedColor;
+            if(_selectedPaletteIndex != null)
+            {
+                SpriteData[x, y] = _selectedColor;
+                SpritePaletteIndices[x, y] = _selectedPaletteIndex.Value;
+            }
+            else
+            {
+                SpriteData[x, y] = "transparent";
+                SpritePaletteIndices[x, y] = null;
+            }
         }
     }
 
