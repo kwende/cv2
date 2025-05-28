@@ -1,7 +1,243 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@page "/sprite-editor"
+@using Common
+@using MudBlazor
 
-<h1>Hello, world!</h1>
+<MudAppBar Color="Color.Primary" Elevation="1">
+    <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
+</MudAppBar>
 
-Welcome to your new app.
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Palette Panel -->
+        <div class="col-md-5">
+            <MudPaper Class="p-3">
+                <MudText Typo="Typo.h6">Palette Selection</MudText>
+                <div class="palette-grid mt-2">
+                    @* Loop through NES palette colors *@
+                    @foreach (var color in NesPalette)
+                    {
+                        <div class="color-cell no-select" style="background-color:@color" 
+                            @onclick="() => OnPaletteColorClick(color)"></div>
+                    }
+                </div>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Selected Colors</MudText>
+                <div class="selected-colors d-flex mt-1">
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        var color = SelectedColors[i]; 
+                        var index = i;
+                        <div class="selected-color-cell no-select" 
+                            @onclick="()=>OnSelectedColorClick(color, index)" 
+                            style="background-color:@(SelectedColors[i] ?? "#ffffff")"></div>
+                    }
+                </div>
+            </MudPaper>
+        </div>
+
+        <!-- Canvas Panel -->
+        <div class="col-md-7" @onpointerup="()=>{_isDrawing = false;}">
+            <MudPaper Class="p-3">
+                <MudText Typo="Typo.h6">Sprite Canvas (16×16)</MudText>
+                <div class="sprite-canvas mt-2">
+                    @for (int y = 0; y < 16; y++)
+                    {
+                        @for (int x = 0; x < 16; x++)
+                        {
+                            var _x = x; 
+                            var _y = y;
+
+                            <div class="pixel no-select"
+                                 style="background-color:@GetPixelColor(x, y)"
+                                 @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
+                                @onclick="() => OnPixelClick(_x, _y)"
+                                @onpointerenter="()=>OnPaint(_x, _y)"></div>
+                        }
+                    }
+                </div>
+            </MudPaper>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <MudFileUpload Accept=".nes" T="IBrowserFile" FilesChanged="UploadFiles">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload">
+                        Upload Files
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Palette grid: 16 columns */
+    .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(16, 24px);
+        grid-gap: 4px;
+    }
+    .color-cell {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #444;
+        cursor: pointer;
+    }
+
+    .no-select {
+        /* Prevent any selection or caret showing up */
+        user-select: none; /* standard */
+        -webkit-user-select: none; /* Safari/Chrome */
+        -ms-user-select: none; /* IE/Edge */
+        /* Hide the blinking caret if focus does land there */
+        caret-color: transparent;
+        /* Remove the focus outline so nothing shows when you click */
+        outline: none;
+    }
+
+    /* Selected palette slots */
+    .selected-colors .selected-color-cell {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #444;
+        margin-right: 8px;
+        cursor: pointer;
+    }
+
+    /* Sprite canvas: 16×16 pixels */
+    .sprite-canvas {
+        display: grid;
+        grid-template-columns: repeat(16, 20px);
+        grid-template-rows: repeat(16, 20px);
+    }
+    .pixel {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    protected string[] NesPalette = new string[64] {
+        "#7C7C7C",
+        "#0000FC",
+        "#0000BC",
+        "#4428BC",
+        "#940084",
+        "#A80020",
+        "#A81000",
+        "#881400",
+        "#503000",
+        "#007800",
+        "#006800",
+        "#005800",
+        "#004058",
+        "#000000",
+        "#000000",
+        "#000000",
+        "#BCBCBC",
+        "#0078F8",
+        "#0058F8",
+        "#6844FC",
+        "#D800CC",
+        "#E40058",
+        "#F83800",
+        "#E45C10",
+        "#AC7C00",
+        "#00B800",
+        "#00A800",
+        "#00A844",
+        "#008888",
+        "#000000",
+        "#000000",
+        "#000000",
+        "#F8F8F8",
+        "#3CBCFC",
+        "#6888FC",
+        "#9878F8",
+        "#F878F8",
+        "#F85898",
+        "#F87858",
+        "#FCA044",
+        "#F8B800",
+        "#B8F818",
+        "#58D854",
+        "#58F898",
+        "#00E8D8",
+        "#787878",
+        "#000000",
+        "#000000",
+        "#FCFCFC",
+        "#A4E4FC",
+        "#B8B8F8",
+        "#D8B8F8",
+        "#F8B8F8",
+        "#F8A4C0",
+        "#F0D0B0",
+        "#FCE0A8",
+        "#F8D878",
+        "#D8F878",
+        "#B8F8B8",
+        "#B8F8D8",
+        "#00FCFC",
+        "#F8D8F8",
+        "#000000",
+        "#000000",
+    };
+
+    protected int _selectedColorIndex = 0;
+    protected string _selectedColor = string.Empty;
+    protected bool _isDrawing = false;
+    protected NesROM _rom = new NesROM();
+
+    // Holds the four user-selected colors
+    protected string[] SelectedColors = new string[4];
+
+    // 16×16 grid storing each pixel's color (hex code)
+    protected string[,] SpriteData = new string[16, 16];
+
+    protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
+
+    protected void OnPaletteColorClick(string color)
+    {
+        SelectedColors[_selectedColorIndex] = color; 
+        _selectedColorIndex = (_selectedColorIndex + 1) % 4;
+    }   
+
+    protected async Task UploadFiles(IBrowserFile file)
+    {
+        await file.OpenReadStream().CopyToAsync(_nesGameBytes);
+        await _rom.Load(_nesGameBytes); 
+
+        var sheets = _rom.GetSpriteSheets(); 
+
+        var simonSheet1 = sheets[1]; 
+    }
+
+    protected void OnSelectedColorClick(string color, int index)
+    {
+        _selectedColorIndex = index; 
+        _selectedColor = color; 
+    }
+
+    private void OnPixelClick(int x, int y)
+    {
+        SpriteData[x, y] = _selectedColor;
+    }
+
+    protected void OnPaint(int x, int y)
+    {
+        if(_isDrawing)
+        {
+            SpriteData[x, y] = _selectedColor;
+        }
+    }
+
+    private string GetPixelColor(int x, int y) => SpriteData[x, y] ?? "transparent";
+}
