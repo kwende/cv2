@@ -1,3 +1,4 @@
+using MudBlazor.Services;
 using WebEditor.Components;
 
 namespace WebEditor
@@ -11,6 +12,7 @@ namespace WebEditor
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+            builder.Services.AddMudServices();
 
             var app = builder.Build();
 
