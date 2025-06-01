@@ -4,8 +4,6 @@
 @using Common
 @using MudBlazor
 
-@inject IJSRuntime _jsRuntime; 
-
 <MudAppBar Color="Color.Primary" Elevation="1">
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
 </MudAppBar>
@@ -45,14 +43,14 @@
         </_SpriteEditor>
 
     </div>
-    <div class="row mt-4 d-flex">
-        @for (int i = 0; i < SpriteCount; i++)
+    <div class="row mt-4 d-flex gap-1">
+        @foreach (var sprite in Sprites)
         {
-            var canvasIndex = i; 
-            <div style="width:64px; cursor:pointer">
-                <canvas @onclick="() => OnCanvasClick(canvasIndex)" id="@($"thumb{i}")"
-                    width="16" height="16" style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
-            </div>
+            <_SpritePreview SpriteClicked="OnSpritePreviewClicked" Sprite="@sprite"
+                            Slot1Color="Slot1NesColor"
+                            Slot2Color="Slot2NesColor"
+                            Slot3Color="Slot3NesColor">
+            </_SpritePreview>
         }
     </div>
 </div>
@@ -68,67 +66,21 @@
     protected NesColor? Slot2NesColor {get;set;} = null;
     protected NesColor? Slot3NesColor { get; set; } = null;
 
-    // Holds the four user-selected colors
-    // protected string[] SelectedHexColorCodes = new string[3];
-    // protected int[] SelectedNesColorCodes = new int[3]; 
-
-    // 16×16 grid storing each pixel's color (hex code)
-    // protected string[,] SpriteData = new string[16, 16];
-    // protected int?[,] SpritePaletteIndices = new int?[16,16]; 
-
-    protected int SpriteCount = 18; 
+    protected int SpriteCount = 18;
+    protected List<Sprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
 
-    protected void OnCanvasClick(int canvasId)
+    protected async Task OnSpritePreviewClicked(Sprite sprite)
     {
-
+        SelectedSprite = sprite; 
     }
 
     protected void LoadPalette(int[] palette)
     {
-        // for(int a=0;a<3;a++)
-        // {
-        //     SelectedHexColorCodes[a] = NesColorsUtils.NesColorCodeToColor(palette[a]);
-        //     SelectedNesColorCodes[a] = palette[a]; 
-        // }
-    }
-
-    // protected async Task LoadSprite(Sprite sprite1)
-    // {
-    //     await Task.Run(()=>
-    //     {
-    //         for (int y = 0; y < sprite1.Height; y++)
-    //         {
-    //             for (int x = 0; x < sprite1.Width; x++)
-    //             {
-    //                 var index = y * sprite1.Width + x;
-
-    //                 if(sprite1.SheetData[index] == 0)
-    //                 {
-    //                     SpriteData[x, y] = string.Empty;
-    //                     SpritePaletteIndices[x,y] = null; 
-    //                 }
-    //                 else
-    //                 {
-    //                     var sheetValue = sprite1.SheetData[index] -1; 
-    //                     SpriteData[x, y] = SelectedHexColorCodes[sheetValue];
-    //                     SpritePaletteIndices[x, y] = sheetValue;
-    //                 }
-    //             }
-    //         }
-    //     }); 
-    // }
-
-
-    private IJSObjectReference _module; 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(_module == null)
-        {
-            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>(
-                "import", "./Components/Pages/Home.razor.js");
-        }
+        Slot1NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[0]); 
+        Slot2NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[1]);
+        Slot3NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[2]);
     }
 
     protected async Task UploadFiles(IBrowserFile file)
@@ -146,21 +98,18 @@
 
         LoadPalette(Constants.SimonPalette); 
 
-        var result = SpriteUtils.MergeSideBySide(sprite1, sprite2); 
+        var result = SpriteUtils.MergeSideBySide(sprite1, sprite2);
 
-        //await LoadSprite(result);
+        SelectedSprite = result;
 
-        
-        // for (int i = 0; i < SpriteCount;i++)
-        // {
-        //     var spriteA = simonSheet1.Sprites[i*2+1];
-        //     var spriteB = simonSheet1.Sprites[i*2+2];
-        //     var merged = SpriteUtils.MergeSideBySide(spriteA, spriteB); 
+        for (int i = 0; i < SpriteCount; i++)
+        {
+            var spriteA = simonSheet1.Sprites[i * 2 + 1];
+            var spriteB = simonSheet1.Sprites[i * 2 + 2];
+            var merged = SpriteUtils.MergeSideBySide(spriteA, spriteB);
 
-        //     var spriteImage = await SpriteUtils.PaintSprite(merged, SelectedHexColorCodes);
-        //     await _module.InvokeVoidAsync("drawSpriteOnCanvas", $"thumb{i}", spriteImage);
-        // }
-
+            Sprites.Add(merged);
+        }
     }
 }
 

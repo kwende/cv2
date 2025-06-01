@@ -65,8 +65,69 @@
         }
     }
 
+    private async Task LoadSprite(Sprite sprite)
+    {
+        await Task.Run(() =>
+        {
+            if(sprite == null)
+            {
+                ColorBimap = new string[16,16]; 
+                SlotIndices = new int?[16,16]; 
+            }
+            else
+            {
+                for (int y = 0, i = 0; y < sprite.Height; y++)
+                {
+                    for (int x = 0; x < sprite.Width; x++, i++)
+                    {
+                        var colorIndex = sprite.SheetData[i];
+
+                        NesColor? color = null;
+                        int? index = 0;
+                        switch (colorIndex)
+                        {
+                            case 1:
+                                index = 1;
+                                color = _slot1Color;
+                                break;
+                            case 2:
+                                index = 2;
+                                color = _slot2Color;
+                                break;
+                            case 3:
+                                index = 3;
+                                color = _slot3Color;
+                                break;
+                        }
+                        ColorBimap[x, y] = color?.ColorHexCode ?? null;
+                        SlotIndices[x, y] = index ?? null;
+                    }
+                }
+            }
+            
+        }); 
+    }
+
+    private Sprite? _sprite = null; 
+
     [Parameter]
-    public Sprite Sprite { get; set; }
+    public Sprite Sprite 
+    {
+        get=> _sprite; 
+        set
+        {
+            if(_sprite != value)
+            {
+                _sprite = value; 
+                _ = LoadSprite(_sprite);
+            }
+        }
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
 
     private NesColor? _slot1Color = null; 
     [Parameter]
@@ -125,12 +186,10 @@
             if (SelectedNesColor != null)
             {
                 ColorBimap[x, y] = SelectedNesColor.ColorHexCode;
-                //SpritePaletteIndices[x, y] = _selectedNesColor.Value;
             }
             else
             {
                 ColorBimap[x, y] = null;
-                //SpritePaletteIndices[x, y] = null;
             }
 
             SlotIndices[x, y] = _selectedColorsSlot;

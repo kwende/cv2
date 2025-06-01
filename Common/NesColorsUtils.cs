@@ -24,6 +24,14 @@ namespace Common
             }
         }
 
+        public static NesColor NesColorCodeToNesColor(int code)
+        {
+            int y = code >> 4;
+            int x = code & 0x0f;
+
+            return HexColorIndexToNesColor((y * 16) + x);
+        }
+
         public static NesColor HexColorIndexToNesColor(int index)
         {
             return new NesColor(FullNesPalette[index]);
