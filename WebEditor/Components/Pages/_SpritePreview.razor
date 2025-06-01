@@ -1,0 +1,94 @@
+﻿@using Common
+
+@inject IJSRuntime _jsRuntime; 
+
+@if(!string.IsNullOrEmpty(UniqueId))
+{
+    <div style="width:64px; cursor:pointer;">
+        <canvas @onmouseover="@(()=>{BorderThickness = "3";})"
+                @onmouseout="@(() => { BorderThickness = "1"; })" 
+                class="border-@(BorderThickness)" id="@UniqueId" @onclick="() => SpriteClicked.InvokeAsync(Sprite)"
+                width="16" height="16" style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
+    </div>
+}
+
+@code {
+    protected string BorderThickness = "1"; 
+
+    [Parameter]
+    public Sprite Sprite { get; set; }
+
+    private NesColor? _slot1Color = null;
+    [Parameter]
+    public NesColor? Slot1Color
+    {
+        get => _slot1Color;
+        set
+        {
+            if (value != null && value != _slot1Color)
+            {
+                _slot1Color = value;
+
+                StateHasChanged(); 
+            }
+        }
+    }
+    private NesColor? _slot2Color = null;
+    [Parameter]
+    public NesColor? Slot2Color
+    {
+        get => _slot2Color;
+        set
+        {
+            if (value != null && value != _slot2Color)
+            {
+                _slot2Color = value;
+
+                StateHasChanged();
+            }
+        }
+    }
+    private NesColor? _slot3Color = null;
+    [Parameter]
+    public NesColor? Slot3Color
+    {
+        get => _slot3Color;
+        set
+        {
+            if (value != null && value != _slot3Color)
+            {
+                _slot3Color = value;
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<Sprite> SpriteClicked { get; set; }
+
+    private IJSObjectReference _module;
+    protected string UniqueId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_module == null)
+        {
+            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./Components/Pages/_SpritePreview.razor.js");
+        }
+
+        var spriteImage = await SpriteUtils.PaintSprite(Sprite,
+                [
+                    Slot1Color.ColorHexCode,
+                    Slot2Color.ColorHexCode,
+                    Slot3Color.ColorHexCode,
+                ]);
+        await _module.InvokeVoidAsync("drawSpriteOnCanvas", UniqueId, spriteImage);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UniqueId = Guid.NewGuid().ToString().Replace("-",""); 
+    }
+}

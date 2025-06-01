@@ -4,8 +4,6 @@
 @using Common
 @using MudBlazor
 
-@inject IJSRuntime _jsRuntime; 
-
 <MudAppBar Color="Color.Primary" Elevation="1">
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
 </MudAppBar>
@@ -14,16 +12,7 @@
     <div class="row">
         <div class="col-12 mb-4">
             <MudText Typo="Typo.h6">1) Upload CV2 ROM</MudText>
-            <MudFileUpload Accept=".nes" T="IBrowserFile" FilesChanged="UploadFiles">
-                <ActivatorContent>
-                    <MudButton Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    StartIcon="@Icons.Material.Filled.CloudUpload">
-                        Upload Files
-                    </MudButton>
-                </ActivatorContent>
-            </MudFileUpload>
-            <MudText Class="mt-3" Typo="Typo.subtitle1">@RomName</MudText>
+            <_RomUpload FileUpload="UploadFiles"></_RomUpload>
         </div>
     </div>
     <div class="row">
@@ -31,289 +20,67 @@
         <div class="col-md-5">
             <MudPaper Class="p-3">
                 <MudText Typo="Typo.h6">2) Choose 4 colors from palette</MudText>
-                <div class="palette-grid mt-2">
-                    @* Loop through NES palette colors *@
-                    @for(int i=0;i<NesColors.NesPalette.Length;i++)
-                    {
-                        var color = NesColors.NesPalette[i]; 
-                        var index = NesColors.NesColorArrayIndexToColorCode(i); 
 
-                        <div class="color-cell no-select" style="background-color:@color" 
-                        @onclick="() => OnAddToPaletteClick(color, index)"></div>
-                    }
-                </div>
+                <_NesColors @bind-SelectedColor="@SelectedNesColor"></_NesColors>
 
                 <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
-                <div class="selected-colors d-flex mt-1">
-                    <div class="background selected-color-cell no-select @(_selectedPaletteIndex == null ? "selected-palette" : "")"
-                    @onclick="()=>OnPaletteColorClicked(string.Empty, null, null)"></div>
 
-                    @for (int i = 0; i < 3; i++)
-                    {
-                        var color = SelectedColors[i]; 
-                        var selectedColorIndex = SelectedColorIndices[i]; 
-                        var index = i;
-                        <div class="selected-color-cell no-select @(_selectedPaletteIndex == index ? "selected-palette" : "")"
-                        @onclick="()=>OnPaletteColorClicked(color, index, selectedColorIndex)"
-                        style="background-color:@(SelectedColors[i] ?? "#ffffff")"></div>
-                    }
-                </div>
+                <_ColorPalette @bind-Slot1Color="Slot1NesColor"
+                               @bind-Slot2Color="Slot2NesColor"
+                               @bind-Slot3Color="Slot3NesColor"
+                               @bind-SelectedNesColor="@SelectedNesColor">
+                </_ColorPalette>
+
             </MudPaper>
         </div>
 
         <!-- Canvas Panel -->
-        @if (SpritePaletteIndices != null)
-        {
-            <div class="col-md-7" @onpointerup="()=>{_isDrawing = false;}">
-                <MudPaper Class="p-3">
-                    <MudText Typo="Typo.h6">4) Draw sprite</MudText>
-                    <div class="sprite-canvas mt-2">
-                        @for (int y = 0, i=0; y < 16; y++)
-                        {
-                            @for (int x = 0; x < 16; x++, i++)
-                            {
-                                var _x = x; 
-                                var _y = y;
+        <_SpriteEditor Sprite="@SelectedSprite" Slot1Color="Slot1NesColor"
+                       Slot2Color="Slot2NesColor"
+                       Slot3Color="Slot3NesColor"
+                       SelectedNesColor="@SelectedNesColor">
 
-                                <div class="@(SpritePaletteIndices[x,y] == null ? "background" : "") pixel no-select"
-                                style="background-color:@GetPixelColor(x, y)"
-                                @onpointerdown="()=>{_isDrawing = true;OnPixelClick(_x, _y);}"
-                                @onclick="() => OnPixelClick(_x, _y)"
-                                @onpointerenter="()=>OnPaint(_x, _y)"></div>
-                            }
-                        }
-                    </div>
-                </MudPaper>
-            </div>
-        }
+        </_SpriteEditor>
 
     </div>
-    <div class="row mt-4 d-flex">
-        @for (int i = 0; i < SpriteCount; i++)
+    <div class="row mt-4 d-flex gap-1">
+        @foreach (var sprite in Sprites)
         {
-            <div style="width:64px;">
-                <canvas id="@($"thumb{i}")"
-                    width="16" height="16"
-                    style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
-            </div>
-    }
+            <_SpritePreview SpriteClicked="OnSpritePreviewClicked" Sprite="@sprite"
+                            Slot1Color="Slot1NesColor"
+                            Slot2Color="Slot2NesColor"
+                            Slot3Color="Slot3NesColor">
+            </_SpritePreview>
+        }
     </div>
 </div>
 
-<style>
-    /* Palette grid: 16 columns */
-    .palette-grid {
-    display: grid;
-    grid-template-columns: repeat(16, 24px);
-    grid-gap: 4px;
-    }
-    .color-cell {
-    width: 24px;
-    height: 24px;
-    border: 1px solid #444;
-    cursor: pointer;
-    }
-
-    .no-select {
-    /* Prevent any selection or caret showing up */
-    user-select: none; /* standard */
-    -webkit-user-select: none; /* Safari/Chrome */
-    -ms-user-select: none; /* IE/Edge */
-    /* Hide the blinking caret if focus does land there */
-    caret-color: transparent;
-    /* Remove the focus outline so nothing shows when you click */
-    outline: none;
-    }
-
-    /* Selected palette slots */
-    .selected-colors .selected-color-cell {
-    width: 40px;
-    height: 40px;
-    border: 1px solid #444;
-    margin-right: 8px;
-    cursor: pointer;
-    }
-
-    .selected-palette{
-    border-color: black !important;
-    border-width: 3px!important;
-    border-radius:2px;
-    }
-
-    /* Sprite canvas: 16×16 pixels */
-    .sprite-canvas {
-    display: grid;
-    grid-template-columns: repeat(16, 20px);
-    grid-template-rows: repeat(16, 20px);
-    }
-    .pixel {
-    width: 20px;
-    height: 20px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    }
-
-    .background {
-    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 100% 100%, auto;
-    }
-</style>
 
 @code {
 
-
-    protected int? _selectedPaletteIndex = null;
-    protected string _selectedColor = string.Empty;
-    protected bool _isDrawing = false;
     protected NesROM _rom = new NesROM();
-    protected string RomName { get; set; } = string.Empty; 
+    protected Sprite? SelectedSprite { get; set; } = null; 
+    protected NesColor? SelectedNesColor { get; set; } = null; 
 
-    // Holds the four user-selected colors
-    protected string[] SelectedColors = new string[3];
-    protected int[] SelectedColorIndices = new int[3]; 
+    protected NesColor? Slot1NesColor {get;set;} = null; 
+    protected NesColor? Slot2NesColor {get;set;} = null;
+    protected NesColor? Slot3NesColor { get; set; } = null;
 
-    // 16×16 grid storing each pixel's color (hex code)
-    protected string[,] SpriteData = new string[16, 16];
-    protected int?[,] SpritePaletteIndices = new int?[16,16]; 
-
-    protected int SpriteCount = 18; 
+    protected int SpriteCount = 18;
+    protected List<Sprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
 
-    protected void OnAddToPaletteClick(string newColor, int index)
+    protected async Task OnSpritePreviewClicked(Sprite sprite)
     {
-        if(_selectedPaletteIndex == null)
-        {
-            _selectedPaletteIndex = 0; 
-        }
-
-        var selectedPaletteIndex = _selectedPaletteIndex.Value; 
-
-        var currentColor = SelectedColors[selectedPaletteIndex];
-
-        if(!string.IsNullOrEmpty(currentColor))
-        {
-            for(int y=0;y<16;y++)
-            {
-                for(int x=0;x<16;x++)
-                {
-                    if (SpritePaletteIndices[x, y] == selectedPaletteIndex)
-                    {
-                        SpriteData[x, y] = newColor; 
-                    }
-                }
-            }
-        }
-
-        SelectedColors[selectedPaletteIndex] = newColor;
-        SelectedColorIndices[selectedPaletteIndex] = index;
-
-        _selectedPaletteIndex = selectedPaletteIndex;
-        _selectedColor = newColor; 
-    }   
+        SelectedSprite = sprite; 
+    }
 
     protected void LoadPalette(int[] palette)
     {
-        for(int a=0;a<3;a++)
-        {
-            SelectedColors[a] = NesColors.NesColorCodeToColor(palette[a]);
-            SelectedColorIndices[a] = palette[a]; 
-        }
-    }
-
-    protected async Task<byte[]> GetSpriteImage(Sprite sprite1, Sprite sprite2)
-    {
-        byte[] image = new byte[16 * 16 * 4];
-
-        for(int y=0, i=0;y<sprite1.Height;y++)
-        {
-            for(int x=0;x<sprite1.Width;x++, i++)
-            {
-                var index1 = (y * 16 + x) * 4; 
-                var index2 = (y * 16 + (x + 8)) * 4;
-
-                var sprite1Index = sprite1.SheetData[i] - 1; 
-
-                uint sprite1Value = 0x00000000; 
-                if (sprite1Index > -1)
-                {
-                    var color = SelectedColors[sprite1Index];
-                    sprite1Value = Convert.ToUInt32($"{color}ff".Replace("#", "0x"), 16);
-                }
-
-                image[index1] = (byte)((sprite1Value & 0xff000000) >> 24);
-                image[index1 + 1] = (byte)((sprite1Value & 0x00ff0000) >> 16);
-                image[index1 + 2] = (byte)((sprite1Value & 0x0000ff00) >> 8);
-                image[index1 + 3] = (byte)((sprite1Value & 0xff0000ff));
-
-                var sprite2Index = sprite2.SheetData[i] - 1;
-
-                uint sprite2Value = 0x00000000;
-                if (sprite2Index > -1)
-                {
-                    var color = SelectedColors[sprite2Index];
-                    sprite2Value = Convert.ToUInt32($"{color}ff".Replace("#", "0x"), 16);
-                }
-
-                image[index2] = (byte)((sprite2Value & 0xff000000) >> 24);
-                image[index2 + 1] = (byte)((sprite2Value & 0x00ff0000) >> 16);
-                image[index2 + 2] = (byte)((sprite2Value & 0x0000ff00) >> 8);
-                image[index2 + 3] = (byte)((sprite2Value & 0xff0000ff));
-            }
-        }
-
-        return image;
-    }
-
-    protected async Task LoadSprite(Sprite sprite1, Sprite sprite2)
-    {
-        await Task.Run(()=>
-        {
-            for (int y = 0; y < sprite1.Height; y++)
-            {
-                for (int x = 0; x < sprite1.Width; x++)
-                {
-                    var index = y * sprite1.Width + x;
-
-                    if(sprite1.SheetData[index] == 0)
-                    {
-                        SpriteData[x, y] = string.Empty;
-                        SpritePaletteIndices[x,y] = null; 
-                    }
-                    else
-                    {
-                        var sheetValue = sprite1.SheetData[index] -1; 
-                        SpriteData[x, y] = SelectedColors[sheetValue];
-                        SpritePaletteIndices[x, y] = sheetValue;
-                    }
-
-                    if (sprite2.SheetData[index] == 0)
-                    {
-                        SpriteData[x + sprite2.Width, y] = string.Empty;
-                        SpritePaletteIndices[x + sprite2.Width, y] = null;
-                    }
-                    else
-                    {
-                        var sheetValue = sprite2.SheetData[index] - 1;
-                        SpriteData[x + sprite2.Width, y] = SelectedColors[sheetValue];
-                        SpritePaletteIndices[x + sprite2.Width, y] = sheetValue;
-                    }
-                }
-            }
-        }); 
-    }
-
-
-    private IJSObjectReference _module; 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(_module == null)
-        {
-            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>(
-                "import", "./Components/Pages/Home.razor.js");
-        }
+        Slot1NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[0]); 
+        Slot2NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[1]);
+        Slot3NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[2]);
     }
 
     protected async Task UploadFiles(IBrowserFile file)
@@ -331,84 +98,77 @@
 
         LoadPalette(Constants.SimonPalette); 
 
-        await LoadSprite(sprite1, sprite2);
+        var result = SpriteUtils.MergeSideBySide(sprite1, sprite2);
 
-        RomName = $"{file.Name} successfully loaded.";
-        for (int i = 0; i < SpriteCount;i++)
+        SelectedSprite = result;
+
+        for (int i = 0; i < SpriteCount; i++)
         {
-            var spriteA = simonSheet1.Sprites[i*2+1];
-            var spriteB = simonSheet1.Sprites[i*2+2];
-            var spritImage = await GetSpriteImage(spriteA, spriteB);
-            await _module.InvokeVoidAsync("drawSpriteOnCanvas", $"thumb{i}", spritImage);
-        }
+            var spriteA = simonSheet1.Sprites[i * 2 + 1];
+            var spriteB = simonSheet1.Sprites[i * 2 + 2];
+            var merged = SpriteUtils.MergeSideBySide(spriteA, spriteB);
 
-        // var sprite0Image = await GetSpriteImage(sprite1, sprite2); 
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb0", sprite0Image);
-
-        // var sprite3 = simonSheet1.Sprites[3];
-        // var sprite4 = simonSheet1.Sprites[4];
-        // var sprite1Image = await GetSpriteImage(sprite3, sprite4);
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb1", sprite1Image);
-
-        // var sprite5 = simonSheet1.Sprites[5];
-        // var sprite6 = simonSheet1.Sprites[6];
-        // var sprite2Image = await GetSpriteImage(sprite5, sprite6);
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb2", sprite2Image);
-
-        // var sprite7 = simonSheet1.Sprites[7];
-        // var sprite8 = simonSheet1.Sprites[8];
-        // var sprite3Image = await GetSpriteImage(sprite7, sprite8);
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb3", sprite3Image);
-
-        // var sprite9 = simonSheet1.Sprites[9];
-        // var sprite10 = simonSheet1.Sprites[10];
-        // var sprite4Image = await GetSpriteImage(sprite9, sprite10);
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb4", sprite4Image);
-
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb0", sprite1Image);
-        // await _module.InvokeVoidAsync("drawSpriteOnCanvas", "thumb0", sprite1Image);
-    }
-
-    protected void OnPaletteColorClicked(string color, int? paletteIndex, int? nesColorIndex)
-    {
-        _selectedPaletteIndex = paletteIndex; 
-        _selectedColor = color; 
-    }
-
-    private void OnPixelClick(int x, int y)
-    {
-        if (_selectedColor != null)
-        {
-            if (_selectedPaletteIndex != null)
-            {
-                SpriteData[x, y] = _selectedColor;
-                SpritePaletteIndices[x, y] = _selectedPaletteIndex.Value;
-            }
-            else
-            {
-                SpriteData[x, y] = "transparent";
-                SpritePaletteIndices[x, y] = null;
-            }
-        }
-        
-    }
-
-    protected void OnPaint(int x, int y)
-    {
-        if(_isDrawing && _selectedColor != null)
-        {
-            if(_selectedPaletteIndex != null)
-            {
-                SpriteData[x, y] = _selectedColor;
-                SpritePaletteIndices[x, y] = _selectedPaletteIndex.Value;
-            }
-            else
-            {
-                SpriteData[x, y] = "transparent";
-                SpritePaletteIndices[x, y] = null;
-            }
+            Sprites.Add(merged);
         }
     }
-
-    private string GetPixelColor(int x, int y) => SpriteData[x, y] ?? "transparent";
 }
+
+
+
+<style>
+    /* Palette grid: 16 columns */
+    .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(16, 24px);
+        grid-gap: 4px;
+    }
+
+    .color-cell {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #444;
+        cursor: pointer;
+    }
+
+    .no-select {
+        /* Prevent any selection or caret showing up */
+        user-select: none; /* standard */
+        -webkit-user-select: none; /* Safari/Chrome */
+        -ms-user-select: none; /* IE/Edge */
+        /* Hide the blinking caret if focus does land there */
+        caret-color: transparent;
+        /* Remove the focus outline so nothing shows when you click */
+        outline: none;
+    }
+
+    /* Selected palette slots */
+    .selected-colors .selected-color-cell {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #444;
+        margin-right: 8px;
+        cursor: pointer;
+    }
+
+
+    /* Sprite canvas: 16×16 pixels */
+    .sprite-canvas {
+        display: grid;
+        grid-template-columns: repeat(16, 20px);
+        grid-template-rows: repeat(16, 20px);
+    }
+
+    .pixel {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+    }
+
+    .background {
+        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>");
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 100% 100%, auto;
+    }
+</style>
