@@ -1,24 +1,43 @@
-﻿namespace Common
+﻿using Common.Exceptions;
+
+namespace Common
 {
-    public static class NesColors
+    public static class NesColorsUtils
     {
-        public static int NesColorArrayIndexToColorCode(int arrayIndex)
+        public static int HexColorCodeToNesColorCode(string hexColorCode)
         {
-            int y = arrayIndex / 16;
-            int x = arrayIndex % 16;
+            ArgumentNullException.ThrowIfNull(hexColorCode, nameof(hexColorCode));
+
+            if (!hexColorCode.StartsWith("#"))
+            {
+                hexColorCode = "#" + hexColorCode;
+            }
+
+            var index = Array.IndexOf<string>(FullNesPalette, hexColorCode);
+            if (index >= 0)
+            {
+                return HexColorIndexToNesColorCode(index);
+            }
+            else
+            {
+                throw new ColorCodeNotFoundException();
+            }
+        }
+
+        public static NesColor HexColorIndexToNesColor(int index)
+        {
+            return new NesColor(FullNesPalette[index]);
+        }
+
+        public static int HexColorIndexToNesColorCode(int index)
+        {
+            int y = index / 16;
+            int x = index % 16;
 
             return (y << 4) | x;
         }
 
-        public static string NesColorCodeToColor(int index)
-        {
-            int y = (0xf0 & index) >> 4;
-            int x = 0x0f & index;
-
-            return NesPalette[(y * 16) + x];
-        }
-
-        public static string[] NesPalette = [
+        public static string[] FullNesPalette = [
         "#7C7C7C",
         "#0000FC",
         "#0000BC",

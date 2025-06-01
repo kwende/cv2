@@ -1,0 +1,42 @@
+﻿@using Common
+
+@inject IJSRuntime _jsRuntime; 
+
+@if(!string.IsNullOrEmpty(UniqueId))
+{
+    <div style="width:64px; cursor:pointer">
+        <canvas id="@UniqueId" @onclick="() => SpriteClicked.InvokeAsync(Sprite)" )"
+                width="16" height="16" style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Sprite Sprite { get; set; }
+
+    [Parameter]
+    public SelectedColorPalette ColorPalette { get; set; }
+
+    [Parameter]
+    public EventCallback<Sprite> SpriteClicked { get; set; }
+
+    private IJSObjectReference _module;
+    protected string UniqueId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_module == null)
+        {
+            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./Components/Pages/Home.razor.js");
+
+            var spriteImage = await SpriteUtils.PaintSprite(Sprite, ColorPalette.ColorCodes);
+            await _module.InvokeVoidAsync("drawSpriteOnCanvas", UniqueId, spriteImage);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UniqueId = Guid.NewGuid().ToString().Replace("-",""); 
+    }
+}
