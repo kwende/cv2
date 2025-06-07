@@ -1,0 +1,224 @@
+﻿@using Common
+@using MudBlazor
+<div class="col-md-7" @onpointerup="() => { IsDrawing = false; }">
+    <MudPaper Class="p-3">
+        <MudText Typo="Typo.h6">4) Draw sprite</MudText>
+        <div class="sprite-canvas mt-2">
+            @for (int y = 0, i=0; y < 16; y++)
+            {
+                @for (int x = 0; x < 16; x++, i++)
+                {
+                    var _x = x; 
+                    var _y = y;
+
+                    <div class="@(ColorBimap[x, y] == null ? "background" : "") pixel no-select"
+                        style="background-color:@GetPixelColor(x, y)"
+                         @onpointerdown="() => { IsDrawing = true; OnPixelClick(_x, _y); }"
+                        @onclick="() => OnPixelClick(_x, _y)"
+                        @onpointerenter="()=>OnPaint(_x, _y)"></div>
+                }
+            }
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    private int? _selectedColorsSlot = null; 
+
+    private NesColor? _selectedNesColor = null; 
+    [Parameter]
+    public NesColor? SelectedNesColor 
+    {
+        get => _selectedNesColor; 
+        set
+        {
+            if(value != _selectedNesColor)
+            {
+                if(value == null)
+                {
+                    _selectedColorsSlot = null; 
+                    _selectedNesColor = null; 
+                }
+                else
+                {
+                    _selectedColorsSlot = null; 
+                    if (value == Slot1Color) _selectedColorsSlot = 1;
+                    else if (value == Slot2Color) _selectedColorsSlot = 2;
+                    else if (value == Slot3Color) _selectedColorsSlot = 3;
+
+                    if(_selectedColorsSlot != null)
+                    {
+                        _selectedNesColor = value;
+                        for(int y=0;y<16;y++)
+                        {
+                            for(int x=0;x<16;x++)
+                            {
+                                if(SlotIndices[x,y] == _selectedColorsSlot)
+                                {
+                                    ColorBimap[x, y] = _selectedNesColor.ColorHexCode; 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task LoadSprite(Sprite sprite)
+    {
+        await Task.Run(() =>
+        {
+            if(sprite == null)
+            {
+                ColorBimap = new string[16,16]; 
+                SlotIndices = new int?[16,16]; 
+            }
+            else
+            {
+                for (int y = 0, i = 0; y < sprite.Height; y++)
+                {
+                    for (int x = 0; x < sprite.Width; x++, i++)
+                    {
+                        var colorIndex = sprite.SheetData[i];
+
+                        NesColor? color = null;
+                        int? index = 0;
+                        switch (colorIndex)
+                        {
+                            case 1:
+                                index = 1;
+                                color = _slot1Color;
+                                break;
+                            case 2:
+                                index = 2;
+                                color = _slot2Color;
+                                break;
+                            case 3:
+                                index = 3;
+                                color = _slot3Color;
+                                break;
+                        }
+                        ColorBimap[x, y] = color?.ColorHexCode ?? null;
+                        SlotIndices[x, y] = index ?? null;
+                    }
+                }
+            }
+            StateHasChanged(); 
+        }); 
+    }
+
+    private Sprite? _sprite = null; 
+
+    [Parameter]
+    public Sprite Sprite 
+    {
+        get=> _sprite; 
+        set
+        {
+            if(_sprite != value)
+            {
+                _sprite = value; 
+                _ = LoadSprite(_sprite);
+            }
+        }
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private NesColor? _slot1Color = null; 
+    [Parameter]
+    public NesColor? Slot1Color 
+    {
+        get => _slot1Color; 
+        set
+        {
+            if (value != null && value != _slot1Color)
+            {
+                _slot1Color = value; 
+            }
+        }
+    }
+
+    private NesColor? _slot2Color = null;
+    [Parameter]
+    public NesColor? Slot2Color
+    {
+        get => _slot2Color;
+        set
+        {
+            if (value != null && value != _slot2Color)
+            {
+                _slot2Color = value;
+            }
+        }
+    }
+
+    private NesColor? _slot3Color = null;
+    [Parameter]
+    public NesColor? Slot3Color 
+    {
+        get => _slot3Color;
+        set
+        {
+            if (value != null && value != _slot3Color)
+            {
+                _slot3Color = value;
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<NesColor?> Slot3ColorChanged { get; set; }
+
+    protected bool IsDrawing { get; set; } = false;
+
+    protected string[,] ColorBimap { get; set; } = new string[16, 16];
+    protected int?[,] SlotIndices { get; set; } = new int?[16, 16]; 
+
+    protected void OnPaint(int x, int y)
+    {
+        if (IsDrawing)
+        {
+            if (SelectedNesColor != null)
+            {
+                ColorBimap[x, y] = SelectedNesColor.ColorHexCode;
+            }
+            else
+            {
+                ColorBimap[x, y] = null;
+            }
+
+            SlotIndices[x, y] = _selectedColorsSlot;
+        }
+    }
+
+    protected void OnPixelClick(int x, int y)
+    {
+        if (SelectedNesColor != null)
+        {
+            ColorBimap[x, y] = SelectedNesColor.ColorHexCode;
+        }
+        else
+        {
+            ColorBimap[x, y] = null;
+        }
+        SlotIndices[x, y] = _selectedColorsSlot;
+
+        IsDrawing = true;
+    }
+
+    private string GetPixelColor(int x, int y) => ColorBimap[x, y] ?? "transparent";
+}
+
+<style>
+    .background {
+        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>");
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 100% 100%, auto;
+    }
+</style>
