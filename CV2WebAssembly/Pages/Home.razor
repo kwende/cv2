@@ -3,6 +3,7 @@
 @page "/sprite-editor"
 @using Common
 @using MudBlazor
+@inject IJSRuntime _jsRuntime;
 
 <MudAppBar Color="Color.Primary" Elevation="1">
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
@@ -13,6 +14,10 @@
         <div class="col-12 mb-4">
             <MudText Typo="Typo.h6">1) Upload CV2 ROM</MudText>
             <_RomUpload FileUpload="UploadFiles"></_RomUpload>
+
+            <button @onclick="DownloadFileFromStream">
+                Download File From Stream
+            </button>
         </div>
     </div>
     <div class="row">
@@ -53,6 +58,7 @@
             </_SpritePreview>
         }
     </div>
+
 </div>
 
 
@@ -70,6 +76,7 @@
     protected List<Sprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
+    private IJSObjectReference _module;
 
     protected async Task OnSpritePreviewClicked(Sprite sprite)
     {
@@ -81,6 +88,25 @@
         Slot1NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[0]); 
         Slot2NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[1]);
         Slot3NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[2]);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_module == null)
+        {
+            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./Pages/Home.razor.js");
+        }
+    }
+
+    protected async Task DownloadFileFromStream()
+    {
+        var fileStream = _rom.GetRom();
+        var fileName = "cv2-altered.nes";
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await _module.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 
     protected async Task UploadFiles(IBrowserFile file)

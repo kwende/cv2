@@ -2,6 +2,7 @@
 {
     public class SpriteSheet
     {
+        public int SheetNumber { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
         public List<Sprite> Sprites { get; set; } = new();

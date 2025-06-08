@@ -34,7 +34,7 @@ namespace Tester
                                 {
                                     for (int x = 0; x < sprite.Width; x++)
                                     {
-                                        var paletteIndex = sprite.SheetData[(y * sprite.Width) + x];
+                                        var paletteIndex = sprite.PaletteIndices[(y * sprite.Width) + x];
 
                                         var spriteXInSheetCoordinates = (_x * sheet.SpriteWidth) + x;
                                         var spriteYInSheetCoordinates = (_y * sheet.SpriteHeight) + y;

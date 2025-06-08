@@ -28,7 +28,7 @@
                 {
                     for (int x = 0; x < sprite.Width; x++, i++)
                     {
-                        var value = sprite.SheetData[i] - 1;
+                        var value = sprite.PaletteIndices[i] - 1;
                         uint sourceValue = 0x00000000;
                         if (value > -1)
                         {
@@ -62,18 +62,18 @@
             {
                 Width = sprite1.Width + sprite2.Width,
                 Height = sprite1.Height,
-                SheetData = new int[(sprite1.Width + sprite2.Width) * sprite1.Height],
+                PaletteIndices = new int[(sprite1.Width + sprite2.Width) * sprite1.Height],
             };
 
             for (int y = 0, sourceIndex = 0; y < sprite1.Height; y++)
             {
                 for (int x = 0; x < sprite1.Width; x++, sourceIndex++)
                 {
-                    var sheet1Value = sprite1.SheetData[sourceIndex];
-                    var sheet2Value = sprite2.SheetData[sourceIndex];
+                    var sheet1Value = sprite1.PaletteIndices[sourceIndex];
+                    var sheet2Value = sprite2.PaletteIndices[sourceIndex];
 
-                    merged.SheetData[(y * merged.Width) + x] = sheet1Value;
-                    merged.SheetData[(y * merged.Width) + x + sprite1.Width] = sheet2Value;
+                    merged.PaletteIndices[(y * merged.Width) + x] = sheet1Value;
+                    merged.PaletteIndices[(y * merged.Width) + x + sprite1.Width] = sheet2Value;
                 }
             }
 

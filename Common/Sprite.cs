@@ -4,6 +4,6 @@
     {
         public int Width { get; set; }
         public int Height { get; set; }
-        public int[] SheetData { get; set; } = Array.Empty<int>();
+        public int[] PaletteIndices { get; set; } = Array.Empty<int>();
     }
 }

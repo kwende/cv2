@@ -80,7 +80,7 @@
                 {
                     for (int x = 0; x < sprite.Width; x++, i++)
                     {
-                        var colorIndex = sprite.SheetData[i];
+                        var colorIndex = sprite.PaletteIndices[i];
 
                         NesColor? color = null;
                         int? index = 0;
