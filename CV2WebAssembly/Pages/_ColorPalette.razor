@@ -22,7 +22,7 @@
 
             <div class="selected-color-cell no-select @(selectedClass)"
                  @onclick="() => OnPaletteColorClicked(color, index)"
-                 style="background-color:@(color.ColorHexCode ?? "#ffffff")"></div>
+                 style="background-color:@(color.ColorHexString ?? "#ffffff")"></div>
         }
     </div>
 }

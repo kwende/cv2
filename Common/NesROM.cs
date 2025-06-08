@@ -33,23 +33,21 @@ namespace Common
                 // hack just for CV2 for now. 
                 int i = 0;
 
-                int rows = eightBySixteenMode ? 8 : 16;
-                int height = eightBySixteenMode ? 16 : 8;
-
                 for (int tileNumber = 0; tileNumber < 32; tileNumber++)
                 {
                     var sheet = new SpriteSheet
                     {
                         Height = 128,
                         Width = 128,
-                        Sprites = new List<Sprite>(),
-                        SpriteHeight = height,
+                        Sprites = new List<ISprite>(),
+                        SpriteHeight = eightBySixteenMode ? 16 : 8,
                         SpriteWidth = 8,
                     };
 
                     sheets.Add(sheet);
                     // each tile is a 16xwidth grid of sprites
-                    for (int y = 0; y < rows; y++)
+                    ISprite? prevSprite = null;
+                    for (int y = 0; y < 16; y++)
                     {
                         for (int x = 0; x < 16; x++)
                         {
@@ -58,28 +56,8 @@ namespace Common
                             var panel2 = new ReadOnlySpan<byte>(chrBank, i, 8);
                             i += 8;
 
-                            if (eightBySixteenMode)
-                            {
-                                byte[] panel1Combined = new byte[16];
-                                byte[] panel2Combined = new byte[16];
-
-                                var panel3 = new ReadOnlySpan<byte>(chrBank, i, 8);
-                                i += 8;
-                                var panel4 = new ReadOnlySpan<byte>(chrBank, i, 8);
-                                i += 8;
-
-                                panel1.CopyTo(panel1Combined);
-                                panel2.CopyTo(panel2Combined);
-
-                                panel3.CopyTo(panel1Combined.AsSpan(panel1.Length));
-                                panel4.CopyTo(panel2Combined.AsSpan(panel2.Length));
-
-                                panel1 = new ReadOnlySpan<byte>(panel1Combined);
-                                panel2 = new ReadOnlySpan<byte>(panel2Combined);
-                            }
-
-                            int[] sheetData = new int[8 * height];
-                            for (int _y = 0; _y < height; _y++)
+                            int[] paletteIndices = new int[8 * 8];
+                            for (int _y = 0; _y < 8; _y++)
                             {
                                 var panel1Byte = panel1[_y];
                                 var panel2Byte = panel2[_y];
@@ -94,19 +72,31 @@ namespace Common
                                     int paletteIndex = (panel2Bit << 1) | panel1Bit;
 
                                     var index = (_y * 8) + _x;
-                                    sheetData[index] = paletteIndex;
+                                    paletteIndices[index] = paletteIndex;
                                 }
                             }
 
-                            sheet.Sprites.Add(new Sprite
+                            var curSprite = Sprite.Load(paletteIndices);
+                            if (eightBySixteenMode)
                             {
-                                Width = 8,
-                                Height = height,
-                                SheetData = sheetData,
-                            });
+                                if (prevSprite == null)
+                                {
+                                    prevSprite = curSprite;
+                                }
+                                else
+                                {
+                                    sheet.Sprites.Add(CompositeSprite.Create([prevSprite, curSprite], SpriteOrientationEnum.Vertical));
+                                    prevSprite = null;
+                                }
+                            }
+                            else
+                            {
+                                sheet.Sprites.Add(curSprite);
+                            }
                         }
                     }
                 }
+
                 return sheets;
             }
         }

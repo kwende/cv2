@@ -5,7 +5,7 @@
     {
         var color = NesColorsUtils.HexColorIndexToNesColor(i);
 
-        <div class="color-cell no-select" style="background-color:@color.ColorHexCode"
+        <div class="color-cell no-select" style="background-color:@color.ColorHexString"
              @onclick="() => OnAddToPaletteClick(color)"></div>
     }
 </div>

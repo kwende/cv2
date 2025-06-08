@@ -4,7 +4,7 @@ namespace Common
 {
     public static class NesColorsUtils
     {
-        public static int HexColorCodeToNesColorCode(string hexColorCode)
+        public static int HexColorCodeToNesColorIndex(string hexColorCode)
         {
             ArgumentNullException.ThrowIfNull(hexColorCode, nameof(hexColorCode));
 
@@ -16,7 +16,7 @@ namespace Common
             var index = Array.IndexOf<string>(FullNesPalette, hexColorCode);
             if (index >= 0)
             {
-                return HexColorIndexToNesColorCode(index);
+                return HexColorIndexToNesColorIndex(index);
             }
             else
             {
@@ -24,10 +24,10 @@ namespace Common
             }
         }
 
-        public static NesColor NesColorCodeToNesColor(int code)
+        public static NesColor NesColorIndexToNesColor(int coordinate)
         {
-            int y = code >> 4;
-            int x = code & 0x0f;
+            int y = coordinate >> 4;
+            int x = coordinate & 0x0f;
 
             return HexColorIndexToNesColor((y * 16) + x);
         }
@@ -37,7 +37,7 @@ namespace Common
             return new NesColor(FullNesPalette[index]);
         }
 
-        public static int HexColorIndexToNesColorCode(int index)
+        public static int HexColorIndexToNesColorIndex(int index)
         {
             int y = index / 16;
             int x = index % 16;

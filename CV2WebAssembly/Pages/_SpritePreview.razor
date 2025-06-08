@@ -16,7 +16,7 @@
     protected string BorderThickness = "1"; 
 
     [Parameter]
-    public Sprite Sprite { get; set; }
+    public ISprite Sprite { get; set; }
 
     private NesColor? _slot1Color = null;
     [Parameter]
@@ -65,7 +65,7 @@
     }
 
     [Parameter]
-    public EventCallback<Sprite> SpriteClicked { get; set; }
+    public EventCallback<ISprite> SpriteClicked { get; set; }
 
     private IJSObjectReference _module;
     protected string UniqueId { get; set; }
@@ -78,13 +78,8 @@
                 "import", "./Pages/_SpritePreview.razor.js");
         }
 
-        var spriteImage = await SpriteUtils.PaintSprite(Sprite,
-                [
-                    Slot1Color.ColorHexCode,
-                    Slot2Color.ColorHexCode,
-                    Slot3Color.ColorHexCode,
-                ]);
-        await _module.InvokeVoidAsync("drawSpriteOnCanvas", UniqueId, spriteImage);
+        var array = Sprite.ToRGBA(Slot1Color, Slot2Color, Slot3Color).ToArray(); 
+        await _module.InvokeVoidAsync("drawSpriteOnCanvas", UniqueId, array);
     }
 
     protected override async Task OnInitializedAsync()
