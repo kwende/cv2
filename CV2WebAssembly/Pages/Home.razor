@@ -1,5 +1,7 @@
 ﻿@page "/"
 
+@inject ILogger<Home> _logger; 
+
 @page "/sprite-editor"
 @using Common
 @using MudBlazor
@@ -81,6 +83,10 @@
         Slot1NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[0]); 
         Slot2NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[1]);
         Slot3NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[2]);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
     }
 
     protected async Task UploadFiles(IBrowserFile file)

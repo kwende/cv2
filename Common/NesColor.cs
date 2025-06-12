@@ -9,11 +9,13 @@
         {
             get
             {
-                byte[] bytes = new byte[4];
-                bytes[0] = (byte)((ColorRGBUInt >> 24) & 0x000000ff);
-                bytes[1] = (byte)((ColorRGBUInt >> 16) & 0x000000ff);
-                bytes[2] = (byte)((ColorRGBUInt >> 8) & 0x000000ff);
-                bytes[3] = (byte)((ColorRGBUInt) & 0x000000ff);
+                byte[] bytes =
+                [
+                    (byte)((ColorRGBUInt >> 16) & 0x000000ff),
+                    (byte)((ColorRGBUInt >> 8) & 0x000000ff),
+                    (byte)((ColorRGBUInt) & 0x000000ff),
+                    0xff,
+                ];
 
                 return bytes;
             }

@@ -76,11 +76,12 @@
             }
             else
             {
+                var paletteIndices = sprite.PaletteIndices;
                 for (int y = 0, i = 0; y < sprite.Height; y++)
                 {
                     for (int x = 0; x < sprite.Width; x++, i++)
                     {
-                        var colorIndex = sprite.PaletteIndices[i];
+                        var colorIndex = paletteIndices[i];
 
                         NesColor? color = null;
                         int? index = 0;

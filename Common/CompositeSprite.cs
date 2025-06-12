@@ -31,19 +31,7 @@ namespace Common
                     {
                         for (int x = cornerX; x < (cornerX + _spriteWidth); x++, srcIndex++)
                         {
-                            if (srcIndex > sprite.PaletteIndices.Length)
-                            {
-                                Console.WriteLine();
-                            }
-                            try
-                            {
-                                ret[(y * Width) + x] = sprite.PaletteIndices[srcIndex];
-
-                            }
-                            catch (Exception ex)
-                            {
-
-                            }
+                            ret[(y * Width) + x] = sprite.PaletteIndices[srcIndex];
                         }
                     }
 
