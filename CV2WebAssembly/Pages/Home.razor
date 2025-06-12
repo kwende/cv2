@@ -1,5 +1,7 @@
 ﻿@page "/"
 
+@inject ILogger<Home> _logger; 
+
 @page "/sprite-editor"
 @using Common
 @using MudBlazor
@@ -59,7 +61,7 @@
 @code {
 
     protected NesROM _rom = new NesROM();
-    protected Sprite? SelectedSprite { get; set; } = null; 
+    protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
 
     protected NesColor? Slot1NesColor {get;set;} = null; 
@@ -67,20 +69,24 @@
     protected NesColor? Slot3NesColor { get; set; } = null;
 
     protected int SpriteCount = 18;
-    protected List<Sprite> Sprites { get; set; } = new(); 
+    protected List<ISprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
 
-    protected async Task OnSpritePreviewClicked(Sprite sprite)
+    protected async Task OnSpritePreviewClicked(ISprite sprite)
     {
         SelectedSprite = sprite; 
     }
 
     protected void LoadPalette(int[] palette)
     {
-        Slot1NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[0]); 
-        Slot2NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[1]);
-        Slot3NesColor = NesColorsUtils.NesColorCodeToNesColor(palette[2]);
+        Slot1NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[0]); 
+        Slot2NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[1]);
+        Slot3NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[2]);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
     }
 
     protected async Task UploadFiles(IBrowserFile file)
@@ -98,17 +104,15 @@
 
         LoadPalette(Constants.SimonPalette); 
 
-        var result = SpriteUtils.MergeSideBySide(sprite1, sprite2);
-
-        SelectedSprite = result;
+        SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
 
         for (int i = 0; i < SpriteCount; i++)
         {
             var spriteA = simonSheet1.Sprites[i * 2 + 1];
             var spriteB = simonSheet1.Sprites[i * 2 + 2];
-            var merged = SpriteUtils.MergeSideBySide(spriteA, spriteB);
 
-            Sprites.Add(merged);
+            Sprites.Add(
+                CompositeSprite.Create([spriteA, spriteB], SpriteOrientationEnum.Horizontal));
         }
     }
 }

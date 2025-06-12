@@ -55,7 +55,7 @@
                             {
                                 if(SlotIndices[x,y] == _selectedColorsSlot)
                                 {
-                                    ColorBimap[x, y] = _selectedNesColor.ColorHexCode; 
+                                    ColorBimap[x, y] = _selectedNesColor.ColorHexString; 
                                 }
                             }
                         }
@@ -65,7 +65,7 @@
         }
     }
 
-    private async Task LoadSprite(Sprite sprite)
+    private async Task LoadSprite(ISprite sprite)
     {
         await Task.Run(() =>
         {
@@ -76,11 +76,12 @@
             }
             else
             {
+                var paletteIndices = sprite.PaletteIndices;
                 for (int y = 0, i = 0; y < sprite.Height; y++)
                 {
                     for (int x = 0; x < sprite.Width; x++, i++)
                     {
-                        var colorIndex = sprite.SheetData[i];
+                        var colorIndex = paletteIndices[i];
 
                         NesColor? color = null;
                         int? index = 0;
@@ -99,7 +100,7 @@
                                 color = _slot3Color;
                                 break;
                         }
-                        ColorBimap[x, y] = color?.ColorHexCode ?? null;
+                        ColorBimap[x, y] = color?.ColorHexString ?? null;
                         SlotIndices[x, y] = index ?? null;
                     }
                 }
@@ -108,10 +109,10 @@
         }); 
     }
 
-    private Sprite? _sprite = null; 
+    private ISprite? _sprite = null;
 
     [Parameter]
-    public Sprite Sprite 
+    public ISprite Sprite 
     {
         get=> _sprite; 
         set
@@ -185,7 +186,7 @@
         {
             if (SelectedNesColor != null)
             {
-                ColorBimap[x, y] = SelectedNesColor.ColorHexCode;
+                ColorBimap[x, y] = SelectedNesColor.ColorHexString;
             }
             else
             {
@@ -200,7 +201,7 @@
     {
         if (SelectedNesColor != null)
         {
-            ColorBimap[x, y] = SelectedNesColor.ColorHexCode;
+            ColorBimap[x, y] = SelectedNesColor.ColorHexString;
         }
         else
         {
