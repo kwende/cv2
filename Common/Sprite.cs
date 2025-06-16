@@ -4,6 +4,7 @@ namespace Common
 {
     public class Sprite : ISprite
     {
+        public long FilePointer { get; set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
         public int[] PaletteIndices { get; private set; }
@@ -15,7 +16,7 @@ namespace Common
             PaletteIndices = paletteIndices;
         }
 
-        public static Sprite Load(int[] paletteIndices)
+        public static Sprite LoadFromIndices(int[] paletteIndices)
         {
             if (paletteIndices.Length != 8 * 8)
             {

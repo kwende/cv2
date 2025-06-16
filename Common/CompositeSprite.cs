@@ -94,7 +94,24 @@ namespace Common
 
         public void SetPaletteIndex(int x, int y, int paletteIndex)
         {
-            throw new NotImplementedException();
+            int spriteIndex = 0;
+            int spriteX = 0, spriteY = 0;
+            switch (Orientation)
+            {
+                case SpriteOrientationEnum.Horizontal:
+                    spriteIndex = x / _spriteWidth;
+                    spriteX = x % _spriteWidth;
+                    spriteY = y;
+                    break;
+                case SpriteOrientationEnum.Vertical:
+                    spriteIndex = y / _spriteHeight;
+                    spriteX = x;
+                    spriteY = y % _spriteHeight;
+                    break;
+            }
+
+            var sprite = _sprites.Skip(spriteIndex).Take(1).First();
+            sprite.SetPaletteIndex(spriteX, spriteY, paletteIndex);
         }
 
         public IEnumerable<byte> ToRGBA(NesColor color1, NesColor color2, NesColor color3)
