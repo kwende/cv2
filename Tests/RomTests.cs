@@ -24,6 +24,7 @@ namespace Tests
             await rom.SaveToStream(memStream);
 
             Assert.AreEqual(fileSize, memStream.Length);
+            int bytesExamined = 0;
             using (FileStream fs = File.OpenRead(@"C:\Users\ben\Downloads\cv2.nes"))
             {
                 memStream.Seek(0, SeekOrigin.Begin);
@@ -32,6 +33,7 @@ namespace Tests
                 {
                     var memoryByte = memStream.ReadByte();
                     Assert.AreEqual(fileByte, memoryByte);
+                    bytesExamined++;
                 }
             }
         }
@@ -61,22 +63,21 @@ namespace Tests
 
             var spriteSheets = rom.GetSpriteSheets(true);
 
-            //var simonSheet = spriteSheets[1];
+            var simonSheet = spriteSheets[1];
 
-            //var sprite1 = simonSheet.Sprites[1];
-            //var sprite2 = simonSheet.Sprites[2];
+            var sprite1 = simonSheet.Sprites[1];
+            var sprite2 = simonSheet.Sprites[2];
 
-            //var compositeSimon = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
+            var compositeSimon = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
 
-            ////compositeSimon.SetPaletteIndex(0, 0, 1);
+            compositeSimon.SetPaletteIndex(0, 0, 1);
 
-            //var compositeSimonSprites = compositeSimon.Sprites.ToArray();
+            var compositeSimonSprites = compositeSimon.Sprites.ToArray();
 
-            //simonSheet.Sprites[1] = compositeSimonSprites[0];
-            //simonSheet.Sprites[2] = compositeSimonSprites[1];
+            simonSheet.Sprites[1] = compositeSimonSprites[0];
+            simonSheet.Sprites[2] = compositeSimonSprites[1];
 
-            //rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
-            rom.SaveSpriteSheets(spriteSheets);
+            rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
             rom.SaveToFile("C:/users/ben/downloads/test.nes");
         }
     }

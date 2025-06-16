@@ -1,6 +1,7 @@
 ﻿@page "/"
 
 @inject ILogger<Home> _logger; 
+@inject IJSRuntime _jsRuntime; 
 
 @page "/sprite-editor"
 @using Common
@@ -15,6 +16,10 @@
         <div class="col-12 mb-4">
             <MudText Typo="Typo.h6">1) Upload CV2 ROM</MudText>
             <_RomUpload FileUpload="UploadFiles"></_RomUpload>
+            @if (RomLoaded)
+            {
+                <a href="" @onlick="()=>OnDownloadClick()">Download</a>
+            }
         </div>
     </div>
     <div class="row">
@@ -61,6 +66,7 @@
 @code {
 
     protected NesROM _rom = new NesROM();
+    protected bool RomLoaded { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
 
@@ -72,6 +78,7 @@
     protected List<ISprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
+    private IJSObjectReference? _jsObjectReference = null; 
 
     protected async Task OnSpritePreviewClicked(ISprite sprite)
     {
@@ -80,40 +87,55 @@
 
     protected void LoadPalette(int[] palette)
     {
-        Slot1NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[0]); 
+        Slot1NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[0]);
         Slot2NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[1]);
         Slot3NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[2]);
     }
 
-    protected override async Task OnInitializedAsync()
+    protected async Task OnDownloadClick()
     {
+        using var memoryStream = new MemoryStream(); 
+        await _rom.SaveToStream(memoryStream); 
+        using var streamRef = new DotNetStreamReference(stream: memoryStream);
+
+        await _jsObjectReference.InvokeVoidAsync("downloadFileFromStream", "cv2-edited.nes", streamRef);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(_jsObjectReference == null)
+        {
+            _jsObjectReference = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
+        }
     }
 
     protected async Task UploadFiles(IBrowserFile file)
     {
         await file.OpenReadStream().CopyToAsync(_nesGameBytes);
-        // await _rom.Load(_nesGameBytes);
+        await _rom.Load(_nesGameBytes);
 
-        // var sheets = _rom.GetSpriteSheets(true);
+        var sheets = _rom.GetSpriteSheets(true);
 
-        // var simonSheet1 = sheets[1];
+        var simonSheet1 = sheets[1];
 
-        // // for demo of loading simon. 
-        // var sprite1 = simonSheet1.Sprites[1];
-        // var sprite2 = simonSheet1.Sprites[2];
+        // for demo of loading simon. 
+        var sprite1 = simonSheet1.Sprites[1];
+        var sprite2 = simonSheet1.Sprites[2];
 
-        // LoadPalette(Constants.SimonPalette); 
+        LoadPalette(Constants.SimonPalette); 
 
-        // SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
+        SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
 
-        // for (int i = 0; i < SpriteCount; i++)
-        // {
-        //     var spriteA = simonSheet1.Sprites[i * 2 + 1];
-        //     var spriteB = simonSheet1.Sprites[i * 2 + 2];
+        for (int i = 0; i < SpriteCount; i++)
+        {
+            var spriteA = simonSheet1.Sprites[i * 2 + 1];
+            var spriteB = simonSheet1.Sprites[i * 2 + 2];
 
-        //     Sprites.Add(
-        //         CompositeSprite.Create([spriteA, spriteB], SpriteOrientationEnum.Horizontal));
-        // }
+            Sprites.Add(
+                CompositeSprite.Create([spriteA, spriteB], SpriteOrientationEnum.Horizontal));
+        }
+
+        RomLoaded = true; 
     }
 }
 
