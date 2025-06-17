@@ -18,7 +18,7 @@
             <_RomUpload FileUpload="UploadFiles"></_RomUpload>
             @if (RomLoaded)
             {
-                <a href="" @onlick="()=>OnDownloadClick()">Download</a>
+                <MudButton OnClick="OnDownloadClick">Download</MudButton>
             }
         </div>
     </div>
@@ -42,18 +42,20 @@
         </div>
 
         <!-- Canvas Panel -->
-        <_SpriteEditor Sprite="@SelectedSprite" Slot1Color="Slot1NesColor"
+        <_SpriteEditor Saved="OnSpriteSaved" Sprite="@SelectedSprite" 
+                       Slot1Color="Slot1NesColor"
                        Slot2Color="Slot2NesColor"
                        Slot3Color="Slot3NesColor"
                        SelectedNesColor="@SelectedNesColor">
-
+                       
         </_SpriteEditor>
 
     </div>
     <div class="row mt-4 d-flex gap-1">
         @foreach (var sprite in Sprites)
         {
-            <_SpritePreview SpriteClicked="OnSpritePreviewClicked" Sprite="@sprite"
+            <_SpritePreview SpriteClicked="OnSpritePreviewClicked" 
+                            Sprite="@sprite"
                             Slot1Color="Slot1NesColor"
                             Slot2Color="Slot2NesColor"
                             Slot3Color="Slot3NesColor">
@@ -65,7 +67,9 @@
 
 @code {
 
-    protected NesROM _rom = new NesROM();
+    private SpriteSheet? _simonSpriteSheet = null; 
+    private NesROM _rom = new NesROM();
+
     protected bool RomLoaded { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
@@ -74,7 +78,7 @@
     protected NesColor? Slot2NesColor {get;set;} = null;
     protected NesColor? Slot3NesColor { get; set; } = null;
 
-    protected int SpriteCount = 18;
+    private int SpriteCount = 18;
     protected List<ISprite> Sprites { get; set; } = new(); 
 
     protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
@@ -92,13 +96,40 @@
         Slot3NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[2]);
     }
 
+    protected async Task OnSpriteSaved(ISprite sprite)
+    {
+        // var spriteSheets = _rom.GetSpriteSheets(true);
+        // var simonSheet = spriteSheets[1];
+
+        // var compositeSimonSprites = ((CompositeSprite)sprite).Sprites.ToArray();
+
+        // simonSheet.Sprites[1] = compositeSimonSprites[0];
+        // simonSheet.Sprites[2] = compositeSimonSprites[1];
+
+        // _rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
+
+        var spritesToSave = sprite.Flatten(true); 
+        // todo: make something which consumes individual sprites, not just whole sheets. 
+        var sheets = _rom.GetSpriteSheets(true);
+        foreach (var spriteToSave in spritesToSave)
+        {
+            var sheet = sheets[spriteToSave.SheetNumber]; 
+            sheet.Sprites[spriteToSave.SpriteIndex] = spriteToSave; 
+        }
+        _rom.SaveSpriteSheets(sheets); 
+    }
+
     protected async Task OnDownloadClick()
     {
-        using var memoryStream = new MemoryStream(); 
-        await _rom.SaveToStream(memoryStream); 
-        using var streamRef = new DotNetStreamReference(stream: memoryStream);
+        if (_jsObjectReference != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await _rom.SaveToStream(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin); 
+            using var streamRef = new DotNetStreamReference(stream: memoryStream);
 
-        await _jsObjectReference.InvokeVoidAsync("downloadFileFromStream", "cv2-edited.nes", streamRef);
+            await _jsObjectReference.InvokeVoidAsync("downloadFile", "cv2-edited.nes", streamRef);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

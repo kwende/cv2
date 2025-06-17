@@ -85,25 +85,12 @@ namespace Common
                                     panel2Byte |= (byte)(panel2Bit << (7 - bytePairBitIndex));
                                 }
 
-                                if (entireGame[fileOffset + spriteOffset + byteOffset] != panel1Byte)
-                                {
-                                    Console.WriteLine();
-                                }
-                                if (entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] != panel2Byte)
-                                {
-                                    Console.WriteLine();
-                                }
-
                                 entireGame[fileOffset + spriteOffset + byteOffset] = panel1Byte;
                                 entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] = panel2Byte;
                             }
 
                         }
                     }
-                }
-                if (_stream.Length != length)
-                {
-                    Console.WriteLine();
                 }
             }
         }
@@ -141,9 +128,10 @@ namespace Common
 
                     sheets.Add(sheet);
                     ISprite? prevSprite = null;
-                    for (int y = 0; y < 16; y++)
+
+                    for (int y = 0, spriteIndex = 0; y < 16; y++)
                     {
-                        for (int x = 0; x < 16; x++)
+                        for (int x = 0; x < 16; x++, spriteIndex++)
                         {
                             var panel1 = new ReadOnlySpan<byte>(chrBank, chrBankOffset, 8);
                             chrBankOffset += 8;
@@ -175,6 +163,8 @@ namespace Common
 
                             var curSprite = Sprite.LoadFromIndices(paletteIndices);
                             curSprite.FilePointer = filePointer; // for debugging. 
+                            curSprite.SheetNumber = tileNumber;
+                            curSprite.SpriteIndex = spriteIndex;
 
                             if (eightBySixteenMode)
                             {
@@ -185,6 +175,8 @@ namespace Common
                                 else
                                 {
                                     var compositeSprite = CompositeSprite.Create([prevSprite, curSprite], SpriteOrientationEnum.Vertical);
+                                    compositeSprite.SheetNumber = tileNumber;
+                                    compositeSprite.SpriteIndex = spriteIndex / 2;
                                     sheet.Sprites.Add(compositeSprite);
                                     prevSprite = null;
                                 }

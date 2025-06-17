@@ -4,6 +4,8 @@ namespace Common
 {
     public class Sprite : ISprite
     {
+        public int SpriteIndex { get; set; }
+        public int SheetNumber { get; set; }
         public long FilePointer { get; set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
@@ -114,6 +116,11 @@ namespace Common
         public Bitmap ToBitmap(NesColor color1, NesColor color2, NesColor color3)
         {
             throw new NotImplementedException();
+        }
+
+        public List<ISprite> Flatten(bool eightBySixteenMode)
+        {
+            return new List<ISprite>([this]);
         }
     }
 }
