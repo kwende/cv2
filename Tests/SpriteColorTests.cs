@@ -10,21 +10,21 @@ namespace Tests
         {
             int[] paletteIndices1 = new int[8 * 8];
             Array.Fill<int>(paletteIndices1, 0);
-            var sprite1 = Sprite.Load(paletteIndices1);
+            var sprite1 = Sprite.LoadFromIndices(paletteIndices1);
 
             int[] paletteIndices2 = new int[8 * 8];
             Array.Fill<int>(paletteIndices2, 1);
-            var sprite2 = Sprite.Load(paletteIndices2);
+            var sprite2 = Sprite.LoadFromIndices(paletteIndices2);
 
             var lhs = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Vertical);
 
             int[] paletteIndices3 = new int[8 * 8];
             Array.Fill<int>(paletteIndices3, 2);
-            var sprite3 = Sprite.Load(paletteIndices3);
+            var sprite3 = Sprite.LoadFromIndices(paletteIndices3);
 
             int[] paletteIndices4 = new int[8 * 8];
             Array.Fill<int>(paletteIndices4, 3);
-            var sprite4 = Sprite.Load(paletteIndices4);
+            var sprite4 = Sprite.LoadFromIndices(paletteIndices4);
 
             var rhs = CompositeSprite.Create([sprite3, sprite4], SpriteOrientationEnum.Vertical);
 
@@ -74,11 +74,11 @@ namespace Tests
         {
             int[] paletteIndices1 = new int[8 * 8];
             Array.Fill<int>(paletteIndices1, 1);
-            var sprite1 = Sprite.Load(paletteIndices1);
+            var sprite1 = Sprite.LoadFromIndices(paletteIndices1);
 
             int[] paletteIndices2 = new int[8 * 8];
             Array.Fill<int>(paletteIndices2, 2);
-            var sprite2 = Sprite.Load(paletteIndices2);
+            var sprite2 = Sprite.LoadFromIndices(paletteIndices2);
 
             var compositeSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
 
@@ -109,11 +109,11 @@ namespace Tests
         {
             int[] paletteIndices1 = new int[8 * 8];
             Array.Fill<int>(paletteIndices1, 1);
-            var sprite1 = Sprite.Load(paletteIndices1);
+            var sprite1 = Sprite.LoadFromIndices(paletteIndices1);
 
             int[] paletteIndices2 = new int[8 * 8];
             Array.Fill<int>(paletteIndices2, 2);
-            var sprite2 = Sprite.Load(paletteIndices2);
+            var sprite2 = Sprite.LoadFromIndices(paletteIndices2);
 
             var compositeSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Vertical);
 
@@ -167,7 +167,7 @@ namespace Tests
                 }
             }
 
-            var sprite = Sprite.Load(spriteIndices);
+            var sprite = Sprite.LoadFromIndices(spriteIndices);
 
             var bytes = sprite.ToRGBA(NesColorsUtils.NesColorIndexToNesColor(index0),
                 NesColorsUtils.NesColorIndexToNesColor(index1),

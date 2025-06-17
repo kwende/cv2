@@ -49,6 +49,9 @@ namespace Common
             }
         }
 
+        public int SpriteIndex { get; set; }
+        public int SheetNumber { get; set; }
+
         public static CompositeSprite Create(IEnumerable<ISprite> sprites, SpriteOrientationEnum orientation)
         {
             ArgumentNullException.ThrowIfNull(sprites, nameof(sprites));
@@ -94,7 +97,24 @@ namespace Common
 
         public void SetPaletteIndex(int x, int y, int paletteIndex)
         {
-            throw new NotImplementedException();
+            int spriteIndex = 0;
+            int spriteX = 0, spriteY = 0;
+            switch (Orientation)
+            {
+                case SpriteOrientationEnum.Horizontal:
+                    spriteIndex = x / _spriteWidth;
+                    spriteX = x % _spriteWidth;
+                    spriteY = y;
+                    break;
+                case SpriteOrientationEnum.Vertical:
+                    spriteIndex = y / _spriteHeight;
+                    spriteX = x;
+                    spriteY = y % _spriteHeight;
+                    break;
+            }
+
+            var sprite = _sprites.Skip(spriteIndex).Take(1).First();
+            sprite.SetPaletteIndex(spriteX, spriteY, paletteIndex);
         }
 
         public IEnumerable<byte> ToRGBA(NesColor color1, NesColor color2, NesColor color3)
@@ -151,6 +171,36 @@ namespace Common
         public Bitmap ToBitmap(NesColor color1, NesColor color2, NesColor color3)
         {
             throw new NotImplementedException();
+        }
+
+        public List<ISprite> Flatten(bool eightBySixteenMode)
+        {
+            List<ISprite> ret = new List<ISprite>();
+            foreach (var sprite in _sprites)
+            {
+                RecurseTillBaseSprite(sprite, ret, eightBySixteenMode);
+            }
+            return ret;
+        }
+
+        private void RecurseTillBaseSprite(ISprite parent, List<ISprite> sprites, bool eightBySixteenMode)
+        {
+            if (!eightBySixteenMode && parent is Sprite)
+            {
+                sprites.Add(parent);
+            }
+            else if (eightBySixteenMode && parent.Height == 16 && parent.Width == 8)
+            {
+                sprites.Add(parent);
+            }
+            else
+            {
+                var childSprites = parent.Flatten(eightBySixteenMode);
+                foreach (var childSprite in childSprites)
+                {
+                    RecurseTillBaseSprite(childSprite, sprites, eightBySixteenMode);
+                }
+            }
         }
     }
 }

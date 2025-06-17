@@ -1,8 +1,14 @@
 ﻿@using Common
 @using MudBlazor
-<div class="col-md-7" @onpointerup="() => { IsDrawing = false; }">
+<div class="col-md-7" @onmouseleave="OnMouseLeave" @onpointerup="() => { IsDrawing = false; }">
     <MudPaper Class="p-3">
-        <MudText Typo="Typo.h6">4) Draw sprite</MudText>
+        <div class="d-flex gap-2">
+            <MudText Typo="Typo.h6">4) Draw sprite</MudText>
+            @if (Edited)
+            {
+                <MudButton OnClick="Save">Save</MudButton>
+            }
+        </div>
         <div class="sprite-canvas mt-2">
             @for (int y = 0, i=0; y < 16; y++)
             {
@@ -15,6 +21,7 @@
                         style="background-color:@GetPixelColor(x, y)"
                          @onpointerdown="() => { IsDrawing = true; OnPixelClick(_x, _y); }"
                         @onclick="() => OnPixelClick(_x, _y)"
+                         @onpointerup="() => { IsDrawing = false; }"
                         @onpointerenter="()=>OnPaint(_x, _y)"></div>
                 }
             }
@@ -24,6 +31,19 @@
 
 @code {
     private int? _selectedColorsSlot = null; 
+
+    protected bool Edited { get; set; } = false; 
+
+    protected async Task Save()
+    {
+        await Saved.InvokeAsync(Sprite); 
+        Edited = false; 
+    }
+
+    protected void OnMouseLeave()
+    {
+        IsDrawing = false; 
+    }
 
     private NesColor? _selectedNesColor = null; 
     [Parameter]
@@ -112,6 +132,9 @@
     private ISprite? _sprite = null;
 
     [Parameter]
+    public EventCallback<ISprite> Saved { get; set; }
+
+    [Parameter]
     public ISprite Sprite 
     {
         get=> _sprite; 
@@ -194,6 +217,10 @@
             }
 
             SlotIndices[x, y] = _selectedColorsSlot;
+
+            _sprite?.SetPaletteIndex(x, y, _selectedColorsSlot == null ? 0 : _selectedColorsSlot.Value);
+
+            Edited = true; 
         }
     }
 
@@ -209,7 +236,10 @@
         }
         SlotIndices[x, y] = _selectedColorsSlot;
 
+        _sprite?.SetPaletteIndex(x, y, _selectedColorsSlot == null ? 0 : _selectedColorsSlot.Value); 
+
         IsDrawing = true;
+        Edited = true; 
     }
 
     private string GetPixelColor(int x, int y) => ColorBimap[x, y] ?? "transparent";

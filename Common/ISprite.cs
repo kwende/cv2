@@ -4,6 +4,8 @@ namespace Common
 {
     public interface ISprite
     {
+        int SpriteIndex { get; set; }
+        int SheetNumber { get; set; }
         int[] PaletteIndices { get; }
         int Width { get; }
         int Height { get; }
@@ -11,5 +13,6 @@ namespace Common
         IEnumerable<byte> ToRGBA(NesColor color1, NesColor color2, NesColor color3);
         IEnumerable<string> ToHex(NesColor color1, NesColor color2, NesColor color3);
         Bitmap ToBitmap(NesColor color1, NesColor color2, NesColor color3);
+        List<ISprite> Flatten(bool eightBySixteenMode);
     }
 }
