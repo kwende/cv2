@@ -6,10 +6,13 @@
 @page "/sprite-editor"
 @using Common
 @using MudBlazor
+@using CV2WebAssembly.Pages
 
 <MudAppBar Color="Color.Primary" Elevation="1">
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
 </MudAppBar>
+
+
 
 <div class="container-fluid mt-4">
     <div class="row">
@@ -22,7 +25,17 @@
             }
         </div>
     </div>
-    @if(RomLoaded)
+    @if (Loading)
+    {
+        <div class="row">
+            <div class="col-12" style="height:500px;">
+                <div class="spinner">
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                </div>
+            </div>
+        </div>
+    }
+    else if(RomLoaded)
     {
         <div class="row">
             <!-- Palette Panel -->
@@ -65,6 +78,7 @@
             }
         </div>
     }
+ 
 </div>
 
 
@@ -74,6 +88,7 @@
     private NesROM? _rom = null; 
 
     protected bool RomLoaded { get; set; } = false; 
+    protected bool Loading { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
 
@@ -101,25 +116,15 @@
 
     protected async Task OnSpriteSaved(ISprite sprite)
     {
-        // var spriteSheets = _rom.GetSpriteSheets(true);
-        // var simonSheet = spriteSheets[1];
-
-        // var compositeSimonSprites = ((CompositeSprite)sprite).Sprites.ToArray();
-
-        // simonSheet.Sprites[1] = compositeSimonSprites[0];
-        // simonSheet.Sprites[2] = compositeSimonSprites[1];
-
-        // _rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
-
         var spritesToSave = sprite.Flatten(true); 
         // todo: make something which consumes individual sprites, not just whole sheets. 
-        var sheets = _rom.GetSpriteSheets(true);
+        var sheets = await _rom.GetSpriteSheets(true);
         foreach (var spriteToSave in spritesToSave)
         {
             var sheet = sheets[spriteToSave.SheetNumber]; 
             sheet.Sprites[spriteToSave.SpriteIndex] = spriteToSave; 
         }
-        _rom.SaveSpriteSheets(sheets); 
+        await _rom.SaveSpriteSheets(sheets); 
     }
 
     protected async Task OnDownloadClick()
@@ -145,11 +150,17 @@
 
     protected async Task UploadFiles(IBrowserFile file)
     {
+        Loading = true; 
+
+        // just gives the spinner a second on super fast loads. 
+        // otherwise things look a tad jumpy. 
+        await Task.Delay(TimeSpan.FromSeconds(1)); 
+
         await file.OpenReadStream().CopyToAsync(_nesGameBytes);
         _rom = new NesROM(); 
         await _rom.Load(_nesGameBytes);
 
-        var sheets = _rom.GetSpriteSheets(true);
+        var sheets = await _rom.GetSpriteSheets(true);
 
         var simonSheet1 = sheets[1];
 
@@ -173,12 +184,26 @@
         }
 
         RomLoaded = true; 
+        Loading = false; 
     }
 }
 
 
 
 <style>
+
+    .spinner {
+        position: absolute;
+        height: 100vh;
+        width: 100%;
+        top: 50%;
+        left: 50%;
+        margin-left: -50px;
+        margin-top: -50px;
+        background: url(/link/to/your/image);
+        background-size: 100%;
+    }
+
     /* Palette grid: 16 columns */
     .palette-grid {
         display: grid;

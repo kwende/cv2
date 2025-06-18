@@ -17,8 +17,8 @@ namespace Tests
                 fileSize = fs.Length;
             }
 
-            var spriteSheets = rom.GetSpriteSheets(true);
-            rom.SaveSpriteSheets(spriteSheets);
+            var spriteSheets = await rom.GetSpriteSheets(true);
+            await rom.SaveSpriteSheets(spriteSheets);
 
             MemoryStream memStream = new MemoryStream();
             await rom.SaveToStream(memStream);
@@ -61,7 +61,7 @@ namespace Tests
             NesROM rom = new NesROM();
             await rom.Load(@"C:\Users\ben\Downloads\cv2.nes");
 
-            var spriteSheets = rom.GetSpriteSheets(true);
+            var spriteSheets = await rom.GetSpriteSheets(true);
 
             var simonSheet = spriteSheets[1];
 
@@ -77,8 +77,8 @@ namespace Tests
             simonSheet.Sprites[1] = compositeSimonSprites[0];
             simonSheet.Sprites[2] = compositeSimonSprites[1];
 
-            rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
-            rom.SaveToFile("C:/users/ben/downloads/test.nes");
+            await rom.SaveSpriteSheets(new List<SpriteSheet>([simonSheet]));
+            await rom.SaveToFile("C:/users/ben/downloads/test.nes");
         }
     }
 }
