@@ -22,53 +22,56 @@
             }
         </div>
     </div>
-    <div class="row">
-        <!-- Palette Panel -->
-        <div class="col-md-5">
-            <MudPaper Class="p-3">
-                <MudText Typo="Typo.h6">2) Choose 4 colors from palette</MudText>
+    @if(RomLoaded)
+    {
+        <div class="row">
+            <!-- Palette Panel -->
+            <div class="col-md-5">
+                <MudPaper Class="p-3">
+                    <MudText Typo="Typo.h6">2) Choose 4 colors from palette</MudText>
 
-                <_NesColors @bind-SelectedColor="@SelectedNesColor"></_NesColors>
+                    <_NesColors @bind-SelectedColor="@SelectedNesColor"></_NesColors>
 
-                <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
+                    <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
 
-                <_ColorPalette @bind-Slot1Color="Slot1NesColor"
-                               @bind-Slot2Color="Slot2NesColor"
-                               @bind-Slot3Color="Slot3NesColor"
-                               @bind-SelectedNesColor="@SelectedNesColor">
-                </_ColorPalette>
+                    <_ColorPalette @bind-Slot1Color="Slot1NesColor"
+                                   @bind-Slot2Color="Slot2NesColor"
+                                   @bind-Slot3Color="Slot3NesColor"
+                                   @bind-SelectedNesColor="@SelectedNesColor">
+                    </_ColorPalette>
 
-            </MudPaper>
+                </MudPaper>
+            </div>
+
+            <!-- Canvas Panel -->
+            <_SpriteEditor Saved="OnSpriteSaved" Sprite="@SelectedSprite"
+                           Slot1Color="Slot1NesColor"
+                           Slot2Color="Slot2NesColor"
+                           Slot3Color="Slot3NesColor"
+                           SelectedNesColor="@SelectedNesColor">
+
+            </_SpriteEditor>
+
         </div>
-
-        <!-- Canvas Panel -->
-        <_SpriteEditor Saved="OnSpriteSaved" Sprite="@SelectedSprite" 
-                       Slot1Color="Slot1NesColor"
-                       Slot2Color="Slot2NesColor"
-                       Slot3Color="Slot3NesColor"
-                       SelectedNesColor="@SelectedNesColor">
-                       
-        </_SpriteEditor>
-
-    </div>
-    <div class="row mt-4 d-flex gap-1">
-        @foreach (var sprite in Sprites)
-        {
-            <_SpritePreview SpriteClicked="OnSpritePreviewClicked" 
-                            Sprite="@sprite"
-                            Slot1Color="Slot1NesColor"
-                            Slot2Color="Slot2NesColor"
-                            Slot3Color="Slot3NesColor">
-            </_SpritePreview>
-        }
-    </div>
+        <div class="row mt-4 d-flex gap-1">
+            @foreach (var sprite in Sprites)
+            {
+                <_SpritePreview SpriteClicked="OnSpritePreviewClicked"
+                                Sprite="@sprite"
+                                Slot1Color="Slot1NesColor"
+                                Slot2Color="Slot2NesColor"
+                                Slot3Color="Slot3NesColor">
+                </_SpritePreview>
+            }
+        </div>
+    }
 </div>
 
 
 @code {
 
     private SpriteSheet? _simonSpriteSheet = null; 
-    private NesROM _rom = new NesROM();
+    private NesROM? _rom = null; 
 
     protected bool RomLoaded { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
@@ -143,6 +146,7 @@
     protected async Task UploadFiles(IBrowserFile file)
     {
         await file.OpenReadStream().CopyToAsync(_nesGameBytes);
+        _rom = new NesROM(); 
         await _rom.Load(_nesGameBytes);
 
         var sheets = _rom.GetSpriteSheets(true);
@@ -156,6 +160,8 @@
         LoadPalette(Constants.SimonPalette); 
 
         SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
+
+        Sprites.Clear(); 
 
         for (int i = 0; i < SpriteCount; i++)
         {
