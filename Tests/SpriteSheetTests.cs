@@ -11,7 +11,7 @@ namespace Tests
             NesROM rom = new NesROM();
             await rom.Load(@"C:\Users\ben\Downloads\cv2.nes");
 
-            var spriteSheets = rom.GetSpriteSheets(true);
+            var spriteSheets = await rom.GetSpriteSheets(true);
             var spriteSheetToExamine = spriteSheets[0];
 
             Assert.AreEqual(8, spriteSheetToExamine.SpriteWidth);
@@ -32,7 +32,7 @@ namespace Tests
             NesROM rom = new NesROM();
             await rom.Load(@"C:\Users\ben\Downloads\cv2.nes");
 
-            var spriteSheets = rom.GetSpriteSheets(false);
+            var spriteSheets = await rom.GetSpriteSheets(false);
             var spriteSheetToExamine = spriteSheets[0];
 
             Assert.AreEqual(8, spriteSheetToExamine.SpriteWidth);

@@ -34,163 +34,170 @@ namespace Common
             });
         }
 
-        public void SaveSpriteSheets(List<SpriteSheet> sheetsToSave)
+        public async Task SaveSpriteSheets(List<SpriteSheet> sheetsToSave)
         {
-            byte[] entireGame = _stream.GetBuffer();
-            long fileOffset = 0;
-
-            var chrOffset = _prgSize + 16;
-
-            var length = _stream.Length;
-            foreach (var sheet in sheetsToSave)
+            await Task.Run(() =>
             {
-                // each sprite is 16 bytes. There are 16x16 sprites on a sheet
-                // so each sheet is 16*16*16 = 4k bytes. 
-                fileOffset = chrOffset + (sheet.SheetNumber * 4_096);
+                byte[] entireGame = _stream.GetBuffer();
+                long fileOffset = 0;
 
-                if (fileOffset != sheet.FilePosition)
-                {
-                    throw new CorruptedSpriteSheetException();
-                }
+                var chrOffset = _prgSize + 16;
 
-                for (int y = 0, i = 0; y < (sheet.EightBySixteen ? 8 : 16); y++)
+                var length = _stream.Length;
+                foreach (var sheet in sheetsToSave)
                 {
-                    for (int x = 0; x < 16; x++, i++)
+                    // each sprite is 16 bytes. There are 16x16 sprites on a sheet
+                    // so each sheet is 16*16*16 = 4k bytes. 
+                    fileOffset = chrOffset + (sheet.SheetNumber * 4_096);
+
+                    if (fileOffset != sheet.FilePosition)
                     {
-                        var sprite = sheet.Sprites[i];
+                        throw new CorruptedSpriteSheetException();
+                    }
 
-                        var spritePalette = sprite.PaletteIndices;
-                        if (spritePalette.Length != 8 * (sheet.EightBySixteen ? 16 : 8))
+                    for (int y = 0, i = 0; y < (sheet.EightBySixteen ? 8 : 16); y++)
+                    {
+                        for (int x = 0; x < 16; x++, i++)
                         {
-                            throw new InvalidPaletteIndexArraySize();
-                        }
-                        var spriteOffset = i * (sheet.EightBySixteen ? 32 : 16);
+                            var sprite = sheet.Sprites[i];
 
-                        int spritePaletteOffset = 0;
-                        for (int bytePairIndex = 0; bytePairIndex < (sheet.EightBySixteen ? 2 : 1); bytePairIndex++)
-                        {
-                            for (int bytePairByteIndex = 0; bytePairByteIndex < 8; bytePairByteIndex++)
+                            var spritePalette = sprite.PaletteIndices;
+                            if (spritePalette.Length != 8 * (sheet.EightBySixteen ? 16 : 8))
                             {
-                                byte panel1Byte = 0x0, panel2Byte = 0x0;
-                                int byteOffset = bytePairByteIndex + (bytePairIndex * 16);
+                                throw new InvalidPaletteIndexArraySize();
+                            }
+                            var spriteOffset = i * (sheet.EightBySixteen ? 32 : 16);
 
-                                for (int bytePairBitIndex = 0; bytePairBitIndex < 8; bytePairBitIndex++, spritePaletteOffset++)
+                            int spritePaletteOffset = 0;
+                            for (int bytePairIndex = 0; bytePairIndex < (sheet.EightBySixteen ? 2 : 1); bytePairIndex++)
+                            {
+                                for (int bytePairByteIndex = 0; bytePairByteIndex < 8; bytePairByteIndex++)
                                 {
-                                    // palette index for that pixel. 
-                                    int paletteIndex = spritePalette[spritePaletteOffset];
-                                    int panel2Bit = paletteIndex >> 1;
-                                    int panel1Bit = paletteIndex & 0x1;
+                                    byte panel1Byte = 0x0, panel2Byte = 0x0;
+                                    int byteOffset = bytePairByteIndex + (bytePairIndex * 16);
 
-                                    panel1Byte |= (byte)(panel1Bit << (7 - bytePairBitIndex));
-                                    panel2Byte |= (byte)(panel2Bit << (7 - bytePairBitIndex));
+                                    for (int bytePairBitIndex = 0; bytePairBitIndex < 8; bytePairBitIndex++, spritePaletteOffset++)
+                                    {
+                                        // palette index for that pixel. 
+                                        int paletteIndex = spritePalette[spritePaletteOffset];
+                                        int panel2Bit = paletteIndex >> 1;
+                                        int panel1Bit = paletteIndex & 0x1;
+
+                                        panel1Byte |= (byte)(panel1Bit << (7 - bytePairBitIndex));
+                                        panel2Byte |= (byte)(panel2Bit << (7 - bytePairBitIndex));
+                                    }
+
+                                    entireGame[fileOffset + spriteOffset + byteOffset] = panel1Byte;
+                                    entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] = panel2Byte;
                                 }
 
-                                entireGame[fileOffset + spriteOffset + byteOffset] = panel1Byte;
-                                entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] = panel2Byte;
                             }
-
                         }
                     }
                 }
-            }
+            });
         }
 
-        public List<SpriteSheet> GetSpriteSheets(bool eightBySixteenMode)
+        public async Task<List<SpriteSheet>> GetSpriteSheets(bool eightBySixteenMode)
         {
-            if (_stream == null || _prgSize == 0 || _chrSize == 0)
+            List<SpriteSheet> sheets = new List<SpriteSheet>();
+
+            await Task.Run(() =>
             {
-                throw new NotInitializedException();
-            }
-            else
-            {
-                List<SpriteSheet> sheets = new List<SpriteSheet>();
-                _stream.Seek(_prgSize + 16, SeekOrigin.Begin);
-                long filePointer = _stream.Position;
-
-                byte[] chrBank = new byte[_chrSize];
-
-                _stream.Read(chrBank, 0, chrBank.Length);
-
-                int chrBankOffset = 0;
-                for (int tileNumber = 0; tileNumber < 32; tileNumber++)
+                if (_stream == null || _prgSize == 0 || _chrSize == 0)
                 {
-                    var sheet = new SpriteSheet
-                    {
-                        FilePosition = filePointer,
-                        EightBySixteen = eightBySixteenMode,
-                        SheetNumber = tileNumber,
-                        Height = 128,
-                        Width = 128,
-                        Sprites = new List<ISprite>(),
-                        SpriteHeight = eightBySixteenMode ? 16 : 8,
-                        SpriteWidth = 8,
-                    };
+                    throw new NotInitializedException();
+                }
+                else
+                {
+                    _stream.Seek(_prgSize + 16, SeekOrigin.Begin);
+                    long filePointer = _stream.Position;
 
-                    sheets.Add(sheet);
-                    ISprite? prevSprite = null;
+                    byte[] chrBank = new byte[_chrSize];
 
-                    for (int y = 0, spriteIndex = 0; y < 16; y++)
+                    _stream.Read(chrBank, 0, chrBank.Length);
+
+                    int chrBankOffset = 0;
+                    for (int tileNumber = 0; tileNumber < 32; tileNumber++)
                     {
-                        for (int x = 0; x < 16; x++, spriteIndex++)
+                        var sheet = new SpriteSheet
                         {
-                            var panel1 = new ReadOnlySpan<byte>(chrBank, chrBankOffset, 8);
-                            chrBankOffset += 8;
-                            filePointer += 8;
+                            FilePosition = filePointer,
+                            EightBySixteen = eightBySixteenMode,
+                            SheetNumber = tileNumber,
+                            Height = 128,
+                            Width = 128,
+                            Sprites = new List<ISprite>(),
+                            SpriteHeight = eightBySixteenMode ? 16 : 8,
+                            SpriteWidth = 8,
+                        };
 
-                            var panel2 = new ReadOnlySpan<byte>(chrBank, chrBankOffset, 8);
-                            chrBankOffset += 8;
-                            filePointer += 8;
+                        sheets.Add(sheet);
+                        ISprite? prevSprite = null;
 
-                            int[] paletteIndices = new int[8 * 8];
-                            for (int _y = 0; _y < 8; _y++)
+                        for (int y = 0, spriteIndex = 0; y < 16; y++)
+                        {
+                            for (int x = 0; x < 16; x++, spriteIndex++)
                             {
-                                var panel1Byte = panel1[_y];
-                                var panel2Byte = panel2[_y];
+                                var panel1 = new ReadOnlySpan<byte>(chrBank, chrBankOffset, 8);
+                                chrBankOffset += 8;
+                                filePointer += 8;
 
-                                for (int _x = 0; _x < 8; _x++)
+                                var panel2 = new ReadOnlySpan<byte>(chrBank, chrBankOffset, 8);
+                                chrBankOffset += 8;
+                                filePointer += 8;
+
+                                int[] paletteIndices = new int[8 * 8];
+                                for (int _y = 0; _y < 8; _y++)
                                 {
-                                    byte mask = (byte)(0x80 >> _x);
+                                    var panel1Byte = panel1[_y];
+                                    var panel2Byte = panel2[_y];
 
-                                    int panel1Bit = (panel1Byte & mask) != 0 ? 1 : 0;
-                                    int panel2Bit = (panel2Byte & mask) != 0 ? 1 : 0;
+                                    for (int _x = 0; _x < 8; _x++)
+                                    {
+                                        byte mask = (byte)(0x80 >> _x);
 
-                                    int paletteIndex = (panel2Bit << 1) | panel1Bit;
+                                        int panel1Bit = (panel1Byte & mask) != 0 ? 1 : 0;
+                                        int panel2Bit = (panel2Byte & mask) != 0 ? 1 : 0;
 
-                                    var index = (_y * 8) + _x;
-                                    paletteIndices[index] = paletteIndex;
+                                        int paletteIndex = (panel2Bit << 1) | panel1Bit;
+
+                                        var index = (_y * 8) + _x;
+                                        paletteIndices[index] = paletteIndex;
+                                    }
                                 }
-                            }
 
-                            var curSprite = Sprite.LoadFromIndices(paletteIndices);
-                            curSprite.FilePointer = filePointer; // for debugging. 
-                            curSprite.SheetNumber = tileNumber;
-                            curSprite.SpriteIndex = spriteIndex;
+                                var curSprite = Sprite.LoadFromIndices(paletteIndices);
+                                curSprite.FilePointer = filePointer; // for debugging. 
+                                curSprite.SheetNumber = tileNumber;
+                                curSprite.SpriteIndex = spriteIndex;
 
-                            if (eightBySixteenMode)
-                            {
-                                if (prevSprite == null)
+                                if (eightBySixteenMode)
                                 {
-                                    prevSprite = curSprite;
+                                    if (prevSprite == null)
+                                    {
+                                        prevSprite = curSprite;
+                                    }
+                                    else
+                                    {
+                                        var compositeSprite = CompositeSprite.Create([prevSprite, curSprite], SpriteOrientationEnum.Vertical);
+                                        compositeSprite.SheetNumber = tileNumber;
+                                        compositeSprite.SpriteIndex = spriteIndex / 2;
+                                        sheet.Sprites.Add(compositeSprite);
+                                        prevSprite = null;
+                                    }
                                 }
                                 else
                                 {
-                                    var compositeSprite = CompositeSprite.Create([prevSprite, curSprite], SpriteOrientationEnum.Vertical);
-                                    compositeSprite.SheetNumber = tileNumber;
-                                    compositeSprite.SpriteIndex = spriteIndex / 2;
-                                    sheet.Sprites.Add(compositeSprite);
-                                    prevSprite = null;
+                                    sheet.Sprites.Add(curSprite);
                                 }
-                            }
-                            else
-                            {
-                                sheet.Sprites.Add(curSprite);
                             }
                         }
                     }
                 }
+            });
 
-                return sheets;
-            }
+            return sheets;
         }
 
         public async Task Load(string filePath)
