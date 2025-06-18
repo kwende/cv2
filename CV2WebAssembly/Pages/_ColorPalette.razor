@@ -2,17 +2,17 @@
 
 <style>
     .selected-palette {
-        border-color: black !important;
-        border-width: 3px !important;
-        border-radius: 2px;
+    border-color: black !important;
+    border-width: 3px !important;
+    border-radius: 2px;
     }
 </style>
 
-@if(!IsLoading)
+@if(!IsLoading && Colors?.Length == 3)
 {
     <div class="selected-colors d-flex mt-1">
         <div class="background selected-color-cell no-select @(_selectedNesColorIndex == 0 ? "selected-palette" : "")"
-             @onclick="() => OnPaletteColorClicked(null, 0)"></div>
+        @onclick="() => OnPaletteColorClicked(null, 0)"></div>
 
         @for (int i = 0; i < 3; i++)
         {
@@ -21,8 +21,8 @@
             var selectedClass = _selectedNesColorIndex == index ? "selected-palette" : "";
 
             <div class="selected-color-cell no-select @(selectedClass)"
-                 @onclick="() => OnPaletteColorClicked(color, index)"
-                 style="background-color:@(color.ColorHexString ?? "#ffffff")"></div>
+            @onclick="() => OnPaletteColorClicked(color, index)"
+            style="background-color:@(color.ColorHexString ?? "#ffffff")"></div>
         }
     </div>
 }
@@ -134,19 +134,11 @@
         }
     }
 
-    private NesColor[] Colors { get; set; } = null; 
+    private NesColor[] Colors { get; set; } = [new(NesColorsUtils.FullNesPalette[0]),
+            new(NesColorsUtils.FullNesPalette[1]), new(NesColorsUtils.FullNesPalette[2])];
 
     protected override async Task OnInitializedAsync()
     {
-        IsLoading = true; 
-        Colors = [new(NesColorsUtils.FullNesPalette[0]),
-            new(NesColorsUtils.FullNesPalette[1]), new(NesColorsUtils.FullNesPalette[2])];
-
-        _ = Slot1ColorChanged.InvokeAsync(Colors[0]);
-        _ = Slot2ColorChanged.InvokeAsync(Colors[1]);
-        _ = Slot3ColorChanged.InvokeAsync(Colors[2]);
-
-        IsLoading = false; 
     }
 
     protected void OnPaletteColorClicked(NesColor? color, int index)
