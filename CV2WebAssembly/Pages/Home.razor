@@ -97,9 +97,9 @@
     protected NesColor? Slot3NesColor { get; set; } = null;
 
     private int SpriteCount = 18;
-    protected List<ISprite> Sprites { get; set; } = new(); 
+    protected List<ISprite> Sprites { get; set; } = new();
 
-    protected MemoryStream _nesGameBytes = new MemoryStream(275_000);
+    protected MemoryStream? _nesGameBytes = null;
     private IJSObjectReference? _jsObjectReference = null; 
 
     protected async Task OnSpritePreviewClicked(ISprite sprite)
@@ -156,6 +156,7 @@
         // otherwise things look a tad jumpy. 
         await Task.Delay(TimeSpan.FromSeconds(1)); 
 
+        _nesGameBytes = new MemoryStream(275_000);
         await file.OpenReadStream().CopyToAsync(_nesGameBytes);
         _rom = new NesROM(); 
         await _rom.Load(_nesGameBytes);
