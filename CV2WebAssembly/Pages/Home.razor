@@ -12,8 +12,6 @@
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
 </MudAppBar>
 
-
-
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12 mb-4">
@@ -35,7 +33,7 @@
             </div>
         </div>
     }
-    else if(RomLoaded)
+    else if (RomLoaded)
     {
         <div class="row">
             <!-- Palette Panel -->
@@ -48,9 +46,9 @@
                     <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
 
                     <_ColorPalette @bind-Slot1Color="Slot1NesColor"
-                                   @bind-Slot2Color="Slot2NesColor"
-                                   @bind-Slot3Color="Slot3NesColor"
-                                   @bind-SelectedNesColor="@SelectedNesColor">
+                                    @bind-Slot2Color="Slot2NesColor"
+                                    @bind-Slot3Color="Slot3NesColor"
+                                    @bind-SelectedNesColor="@SelectedNesColor">
                     </_ColorPalette>
 
                 </MudPaper>
@@ -58,10 +56,10 @@
 
             <!-- Canvas Panel -->
             <_SpriteEditor Saved="OnSpriteSaved" Sprite="@SelectedSprite"
-                           Slot1Color="Slot1NesColor"
-                           Slot2Color="Slot2NesColor"
-                           Slot3Color="Slot3NesColor"
-                           SelectedNesColor="@SelectedNesColor">
+                            Slot1Color="Slot1NesColor"
+                            Slot2Color="Slot2NesColor"
+                            Slot3Color="Slot3NesColor"
+                            SelectedNesColor="@SelectedNesColor">
 
             </_SpriteEditor>
 
@@ -78,9 +76,8 @@
             }
         </div>
     }
- 
-</div>
 
+</div>
 
 @code {
 
