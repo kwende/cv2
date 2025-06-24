@@ -45,7 +45,8 @@
 
                     <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
 
-                    <_ColorPalette @bind-Slot1Color="Slot1NesColor"
+                    <_ColorPalette @bind-SelectedPaletteIndex="SelectedPaletteIndex"
+                                    @bind-Slot1Color="Slot1NesColor"
                                     @bind-Slot2Color="Slot2NesColor"
                                     @bind-Slot3Color="Slot3NesColor"
                                     @bind-SelectedNesColor="@SelectedNesColor">
@@ -88,6 +89,7 @@
     protected bool Loading { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
+    protected int SelectedPaletteIndex { get; set; }= 0; 
 
     protected NesColor? Slot1NesColor {get;set;} = null; 
     protected NesColor? Slot2NesColor {get;set;} = null;
@@ -137,8 +139,50 @@
         }
     }
 
+    [JSInvokable]
+    public Task OnGlobalNumberKey(string key)
+    {
+        if (RomLoaded && !Loading)
+        {
+            switch(key)
+            {
+                case "1":
+                    SelectedPaletteIndex = 0;
+                    break; 
+                case "2":
+                    SelectedPaletteIndex = 1;
+                    break; 
+                case "3":
+                    SelectedPaletteIndex = 2;
+                    break; 
+                case "4":
+                    SelectedPaletteIndex = 3;
+                    break;
+            }
+        }
+        // State has changed; re-render so LastKey appears in the UI
+        return Task.CompletedTask;
+    }
+
+    private DotNetObjectReference<Home> _objRef;
+
+    public void Dispose()
+    {
+        // clean up the JS reference to avoid leaks
+        _objRef?.Dispose();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(firstRender)
+        {
+            // create a JS reference to *this* component
+            _objRef = DotNetObjectReference.Create(this);
+
+            // call your JS initializer, passing the reference
+            await _jsRuntime.InvokeVoidAsync("globalKeyListener.initialize", _objRef);
+        }
+
         if(_jsObjectReference == null)
         {
             _jsObjectReference = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
