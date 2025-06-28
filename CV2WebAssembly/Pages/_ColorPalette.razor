@@ -1,4 +1,5 @@
 ﻿@using Common
+@using Serilog
 
 <style>
     .selected-palette {
@@ -41,7 +42,9 @@
         {
             if (value != _selectedPaletteIndex)
             {
+                Log.Information($"{nameof(_ColorPalette)}:SelectedPaletteIndex: new index selected {value}");
                 _selectedPaletteIndex = value;
+                _ = SelectedPaletteIndexChanged.InvokeAsync(value);
 
                 switch(_selectedPaletteIndex)
                 {
@@ -50,6 +53,7 @@
                         break; 
                     case 1:
                         SelectedNesColor = Slot1Color;
+                        StateHasChanged(); 
                         break; 
                     case 2:
                         SelectedNesColor = Slot2Color;
@@ -58,8 +62,6 @@
                         SelectedNesColor = Slot3Color;
                         break; 
                 }
-
-                _ = SelectedPaletteIndexChanged.InvokeAsync(value); 
             }
         }
     }
@@ -75,25 +77,28 @@
             if (value != _selectedNesColor)
             {
                 _selectedNesColor = value; 
-                SelectedNesColorChanged.InvokeAsync(_selectedNesColor);
-
-                if(value != null)
+                SelectedNesColorChanged
+                .InvokeAsync(_selectedNesColor)
+                .ContinueWith((t)=>
                 {
-                    Colors[SelectedPaletteIndex - 1] = value;
-
-                    switch (SelectedPaletteIndex)
+                    if (value != null)
                     {
-                        case 1:
-                            Slot1ColorChanged.InvokeAsync(value);
-                            break;
-                        case 2:
-                            Slot2ColorChanged.InvokeAsync(value);
-                            break;
-                        case 3:
-                            Slot3ColorChanged.InvokeAsync(value);
-                            break;
+                        Colors[SelectedPaletteIndex - 1] = value;
+
+                        switch (SelectedPaletteIndex)
+                        {
+                            case 1:
+                                Slot1ColorChanged.InvokeAsync(value);
+                                break;
+                            case 2:
+                                Slot2ColorChanged.InvokeAsync(value);
+                                break;
+                            case 3:
+                                Slot3ColorChanged.InvokeAsync(value);
+                                break;
+                        }
                     }
-                }
+                }); 
             }
         }
     }
