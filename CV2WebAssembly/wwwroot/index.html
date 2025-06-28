@@ -29,9 +29,25 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script>
+        window.globalKeyListener = {
+            initialize: function (dotnetHelper) {
+                console.log("globalKeyListener initialized");
+                window.addEventListener('keydown', function (evt) {
+                    if (evt.ctrlKey || evt.altKey || evt.metaKey)
+                        return;
+
+                    if (['1', '2', '3', '4'].includes(evt.key)) {
+                        evt.preventDefault();
+                        // call the instance method OnGlobalNumberKey on the .NET object:
+                        dotnetHelper.invokeMethodAsync('OnGlobalNumberKey', evt.key);
+                    }
+                });
+            }
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="js/globalKeyListener.js"></script>
 </body>
 
 </html>

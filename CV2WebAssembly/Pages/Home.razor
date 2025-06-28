@@ -7,6 +7,7 @@
 @using Common
 @using MudBlazor
 @using CV2WebAssembly.Pages
+@using Serilog
 
 <MudAppBar Color="Color.Primary" Elevation="1">
     <MudText Typo="Typo.h6">NES Sprite Editor</MudText>
@@ -45,10 +46,12 @@
 
                     <MudText Typo="Typo.h6" Class="mt-4">3) Choose from palette</MudText>
 
-                    <_ColorPalette @bind-Slot1Color="Slot1NesColor"
+                    <_ColorPalette @bind-SelectedPaletteIndex="SelectedPaletteIndex"
+                                    @bind-Slot1Color="Slot1NesColor"
                                     @bind-Slot2Color="Slot2NesColor"
                                     @bind-Slot3Color="Slot3NesColor"
-                                    @bind-SelectedNesColor="@SelectedNesColor">
+                                    SelectedNesColor="@SelectedNesColor"
+                                    SelectedNesColorChanged="OnSelectedNesColorChanged">
                     </_ColorPalette>
 
                 </MudPaper>
@@ -88,6 +91,7 @@
     protected bool Loading { get; set; } = false; 
     protected ISprite? SelectedSprite { get; set; } = null; 
     protected NesColor? SelectedNesColor { get; set; } = null; 
+    protected int SelectedPaletteIndex { get; set; }= 0; 
 
     protected NesColor? Slot1NesColor {get;set;} = null; 
     protected NesColor? Slot2NesColor {get;set;} = null;
@@ -102,6 +106,11 @@
     protected async Task OnSpritePreviewClicked(ISprite sprite)
     {
         SelectedSprite = sprite; 
+    }
+
+    protected void OnSelectedNesColorChanged(NesColor? newColor)
+    {
+        SelectedNesColor = newColor; 
     }
 
     protected void LoadPalette(int[] palette)
@@ -137,8 +146,65 @@
         }
     }
 
+    [JSInvokable]
+    public Task OnGlobalNumberKey(string key)
+    {
+        bool triggerKeyClicked = false; 
+        if (RomLoaded && !Loading)
+        {
+            switch(key)
+            {
+                case "1":
+                    Log.Information("Key 1 pressed."); 
+                    SelectedPaletteIndex = 0;
+                    triggerKeyClicked = true; 
+                    break; 
+                case "2":
+                    Log.Information("Key 2 pressed.");
+                    SelectedPaletteIndex = 1;
+                    triggerKeyClicked = true;
+                    break; 
+                case "3":
+                    Log.Information("Key 3 pressed.");
+                    SelectedPaletteIndex = 2;
+                    triggerKeyClicked = true;
+                    break; 
+                case "4":
+                    Log.Information("Key 4 pressed.");
+                    SelectedPaletteIndex = 3;
+                    triggerKeyClicked = true;
+                    break;
+            }
+        }
+
+        if (triggerKeyClicked)
+        {
+            StateHasChanged(); 
+        }
+
+        // State has changed; re-render so LastKey appears in the UI
+        return Task.CompletedTask;
+    }
+
+    private DotNetObjectReference<Home> _objRef;
+
+    public void Dispose()
+    {
+        // clean up the JS reference to avoid leaks
+        _objRef?.Dispose();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(firstRender)
+        {
+            // create a JS reference to *this* component
+            _objRef = DotNetObjectReference.Create(this);
+
+            // call your JS initializer, passing the reference
+            await _jsRuntime.InvokeVoidAsync("globalKeyListener.initialize", _objRef);
+        }
+
         if(_jsObjectReference == null)
         {
             _jsObjectReference = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
@@ -148,6 +214,8 @@
     protected async Task UploadFiles(IBrowserFile file)
     {
         Loading = true; 
+
+        Log.Information("upload files clicked.");
 
         // just gives the spinner a second on super fast loads. 
         // otherwise things look a tad jumpy. 

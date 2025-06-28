@@ -1,4 +1,5 @@
 ﻿@using Common
+@using Serilog
 
 <style>
     .selected-palette {
@@ -11,17 +12,17 @@
 @if(!IsLoading && Colors?.Length == 3)
 {
     <div class="selected-colors d-flex mt-1">
-        <div class="background selected-color-cell no-select @(_selectedNesColorIndex == 0 ? "selected-palette" : "")"
-        @onclick="() => OnPaletteColorClicked(null, 0)"></div>
+        <div class="background selected-color-cell no-select @(SelectedPaletteIndex == 0 ? "selected-palette" : "")"
+        @onclick="() => OnPaletteColorClicked(0)"></div>
 
         @for (int i = 0; i < 3; i++)
         {
             var color = Colors[i];
             var index = i + 1;
-            var selectedClass = _selectedNesColorIndex == index ? "selected-palette" : "";
+            var selectedClass = SelectedPaletteIndex == index ? "selected-palette" : "";
 
             <div class="selected-color-cell no-select @(selectedClass)"
-            @onclick="() => OnPaletteColorClicked(color, index)"
+            @onclick="() => OnPaletteColorClicked(index)"
             style="background-color:@(color.ColorHexString ?? "#ffffff")"></div>
         }
     </div>
@@ -29,9 +30,43 @@
 
 
 @code {
-    private int _selectedNesColorIndex = 0; 
     private NesColor? _selectedNesColor = null; 
-    protected bool IsLoading { get; set; } = false; 
+    protected bool IsLoading { get; set; } = false;
+
+    private int _selectedPaletteIndex = 0; 
+    [Parameter]
+    public int SelectedPaletteIndex
+    {
+        get=> _selectedPaletteIndex;
+        set
+        {
+            if (value != _selectedPaletteIndex)
+            {
+                Log.Information($"{nameof(_ColorPalette)}:SelectedPaletteIndex: new index selected {value}");
+                _selectedPaletteIndex = value;
+                _ = SelectedPaletteIndexChanged.InvokeAsync(value);
+
+                switch(_selectedPaletteIndex)
+                {
+                    case 0:
+                        SelectedNesColor = null;    
+                        break; 
+                    case 1:
+                        SelectedNesColor = Slot1Color;
+                        StateHasChanged(); 
+                        break; 
+                    case 2:
+                        SelectedNesColor = Slot2Color;
+                        break; 
+                    case 3:
+                        SelectedNesColor = Slot3Color;
+                        break; 
+                }
+            }
+        }
+    }
+    [Parameter]
+    public EventCallback<int> SelectedPaletteIndexChanged { get; set; }
 
     [Parameter]
     public NesColor? SelectedNesColor
@@ -39,39 +74,31 @@
         get => _selectedNesColor;
         set
         {
-            bool changed = false; 
-            if (value != null && _selectedNesColorIndex == 0)
+            if (value != _selectedNesColor)
             {
-                _selectedNesColorIndex = 1; 
                 _selectedNesColor = value; 
-                Colors[_selectedNesColorIndex - 1] = _selectedNesColor; 
-                changed = true; 
-            }
-            else if (value != null && _selectedNesColorIndex > 0 && value != _selectedNesColor)
-            {
-                var slotNumber = _selectedNesColorIndex - 1; 
-                _selectedNesColor = value; 
-                Colors[slotNumber] = value;
-
-                changed = true; 
-            }
-
-            if(changed)
-            {
-                SelectedNesColorChanged.InvokeAsync(_selectedNesColor);
-
-                switch (_selectedNesColorIndex)
+                SelectedNesColorChanged
+                .InvokeAsync(_selectedNesColor)
+                .ContinueWith((t)=>
                 {
-                    case 1:
-                        Slot1ColorChanged.InvokeAsync(value);
-                        break; 
-                    case 2:
-                        Slot2ColorChanged.InvokeAsync(value);
-                        break; 
-                    case 3:
-                        Slot3ColorChanged.InvokeAsync(value);
-                        break; 
-                }
+                    if (value != null)
+                    {
+                        Colors[SelectedPaletteIndex - 1] = value;
+
+                        switch (SelectedPaletteIndex)
+                        {
+                            case 1:
+                                Slot1ColorChanged.InvokeAsync(value);
+                                break;
+                            case 2:
+                                Slot2ColorChanged.InvokeAsync(value);
+                                break;
+                            case 3:
+                                Slot3ColorChanged.InvokeAsync(value);
+                                break;
+                        }
+                    }
+                }); 
             }
         }
     }
@@ -126,7 +153,7 @@
 
             _ = slotChangedCallback.InvokeAsync(value);
 
-            if (_selectedNesColorIndex == colorIndex + 1)
+            if (SelectedPaletteIndex == colorIndex + 1)
             {
                 SelectedNesColor = value;
                 _ = SelectedNesColorChanged.InvokeAsync(value);
@@ -137,17 +164,13 @@
     private NesColor[] Colors { get; set; } = [new(NesColorsUtils.FullNesPalette[0]),
             new(NesColorsUtils.FullNesPalette[1]), new(NesColorsUtils.FullNesPalette[2])];
 
-    protected override async Task OnInitializedAsync()
-    {
-    }
 
-    protected void OnPaletteColorClicked(NesColor? color, int index)
+    protected void OnPaletteColorClicked(int index)
     {
-        if (_selectedNesColorIndex != index)
+        if (SelectedPaletteIndex != index)
         {
-            _selectedNesColorIndex = index;
-            _selectedNesColor = color;
-
+            SelectedPaletteIndex = index;
+            
             SelectedNesColorChanged.InvokeAsync(_selectedNesColor);
         }
 

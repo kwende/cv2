@@ -1,5 +1,6 @@
 ﻿@using Common
 @using MudBlazor
+@using Serilog
 <div class="col-md-7" @onmouseleave="OnMouseLeave" @onpointerup="() => { IsDrawing = false; }">
     <MudPaper Class="p-3">
         <div class="d-flex gap-2">
@@ -52,8 +53,11 @@
         get => _selectedNesColor; 
         set
         {
+            Log.Information($"{nameof(_SpriteEditor)}:{nameof(SelectedNesColor)} SelectedNesColor: {value}");
             if(value != _selectedNesColor)
             {
+                Log.Information($"{nameof(_SpriteEditor)}:{nameof(SelectedNesColor)} changed to {value}"); 
+
                 if(value == null)
                 {
                     _selectedColorsSlot = null; 
