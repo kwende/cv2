@@ -8,7 +8,7 @@
         <canvas @onmouseover="@(()=>{BorderThickness = "3";})"
                 @onmouseout="@(() => { BorderThickness = "1"; })" 
                 class="border-@(BorderThickness)" id="@UniqueId" @onclick="() => SpriteClicked.InvokeAsync(Sprite)"
-                width="16" height="16" style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
+                width="8" height="8" style="width:64px; height:64px; image-rendering:pixelated;"></canvas>
     </div>
 }
 

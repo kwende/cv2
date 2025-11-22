@@ -237,7 +237,7 @@
 	{
 		var spritesToSave = sprite.Flatten(true);
 		// todo: make something which consumes individual sprites, not just whole sheets.
-		var sheets = await _rom.GetSpriteSheets(true);
+		var sheets = await _rom.GetSpriteSheets();
 		foreach (var spriteToSave in spritesToSave)
 		{
 			var sheet = sheets[spriteToSave.SheetNumber];
@@ -338,27 +338,25 @@
 		_rom = new NesROM();
 		await _rom.Load(_nesGameBytes);
 
-		var sheets = await _rom.GetSpriteSheets(true);
+		var sheets = await _rom.GetSpriteSheets();
 
 		var simonSheet1 = sheets[1];
 
 		// for demo of loading simon.
-		var sprite1 = simonSheet1.Sprites[1];
-		var sprite2 = simonSheet1.Sprites[2];
+		//var sprite1 = simonSheet1.Sprites[1];
+		//var sprite2 = simonSheet1.Sprites[2];
 
 		LoadPalette(Constants.SimonPalette);
 
-		SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
+		// SelectedSprite = CompositeSprite.Create([sprite1, sprite2], SpriteOrientationEnum.Horizontal);
 
 		Sprites.Clear();
 
 		for (int i = 0; i < SpriteCount; i++)
 		{
-			var spriteA = simonSheet1.Sprites[i * 2 + 1];
-			var spriteB = simonSheet1.Sprites[i * 2 + 2];
+			var spriteA = simonSheet1.Sprites[i];
 
-			Sprites.Add(
-				CompositeSprite.Create([spriteA, spriteB], SpriteOrientationEnum.Horizontal));
+			Sprites.Add(spriteA); 
 		}
 
 		RomLoaded = true;
