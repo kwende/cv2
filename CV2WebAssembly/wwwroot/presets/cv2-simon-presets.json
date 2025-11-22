@@ -1,0 +1,126 @@
+{
+  "game": "Castlevania II: Simon's Quest",
+  "character": "Simon Belmont",
+  "description": "Preview presets describing how 8x8 NES tiles combine into larger sprites for Simon-specific frames.",
+  "tileSize": {
+    "width": 8,
+    "height": 8
+  },
+  "palettes": {
+    "simon-default": {
+      "description": "Sprite palette using the Simon defaults defined in Constants.SimonPalette.",
+      "colors": [15, 22, 32]
+    }
+  },
+  "presets": [
+    {
+      "id": "simon-single-tile",
+      "name": "Single 8x8 reference tile",
+      "compositeWidth": 8,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 1, "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-stand-a",
+      "name": "Standing frame A",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 1, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 2, "x": 8, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-stand-b",
+      "name": "Standing frame B",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 3, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 4, "x": 8, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-walk-a",
+      "name": "Walking frame A",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 5, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 6, "x": 8, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-walk-b",
+      "name": "Walking frame B",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 7, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 8, "x": 8, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-crouch-a",
+      "name": "Crouching frame A",
+      "compositeWidth": 8,
+      "compositeHeight": 16,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 9, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 10, "x": 0, "y": 8 }
+      ]
+    },
+    {
+      "id": "simon-crouch-b",
+      "name": "Crouching frame B",
+      "compositeWidth": 8,
+      "compositeHeight": 16,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 11, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 12, "x": 0, "y": 8 }
+      ]
+    },
+    {
+      "id": "simon-whip-start",
+      "name": "Whip start",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 13, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 14, "x": 8, "y": 0 }
+      ]
+    },
+    {
+      "id": "simon-whip-vertical",
+      "name": "Whip vertical",
+      "compositeWidth": 8,
+      "compositeHeight": 16,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 15, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 16, "x": 0, "y": 8 }
+      ]
+    },
+    {
+      "id": "simon-jump",
+      "name": "Jumping frame",
+      "compositeWidth": 16,
+      "compositeHeight": 8,
+      "palette": "simon-default",
+      "tiles": [
+        { "sheet": 1, "index": 17, "x": 0, "y": 0 },
+        { "sheet": 1, "index": 18, "x": 8, "y": 0 }
+      ]
+    }
+  ]
+}
