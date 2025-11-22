@@ -13,7 +13,7 @@ namespace Tester
             {
                 NesROM rom = new NesROM();
                 await rom.Load(fin);
-                var sheets = await rom.GetSpriteSheets(true);
+                var sheets = await rom.GetSpriteSheets();
 
                 int sheetNumber = 0;
 

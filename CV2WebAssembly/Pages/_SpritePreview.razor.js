@@ -20,8 +20,8 @@
     // Option B (more concise): build it directly
     const img = new ImageData(
         new Uint8ClampedArray(pixelArray),
-        16,
-        16
+        8,
+        8
     );
     ctx.putImageData(img, 0, 0);
 }

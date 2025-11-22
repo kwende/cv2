@@ -55,42 +55,38 @@ namespace Common
                         throw new CorruptedSpriteSheetException();
                     }
 
-                    for (int y = 0, i = 0; y < (sheet.EightBySixteen ? 8 : 16); y++)
+                    for (int spriteIndexY = 0, i = 0; spriteIndexY < 16; spriteIndexY++)
                     {
-                        for (int x = 0; x < 16; x++, i++)
+                        for (int spriteIndexX = 0; spriteIndexX < 16; spriteIndexX++, i++)
                         {
                             var sprite = sheet.Sprites[i];
 
                             var spritePalette = sprite.PaletteIndices;
-                            if (spritePalette.Length != 8 * (sheet.EightBySixteen ? 16 : 8))
+                            if (spritePalette.Length != 8 *8)
                             {
                                 throw new InvalidPaletteIndexArraySize();
                             }
-                            var spriteOffset = i * (sheet.EightBySixteen ? 32 : 16);
+                            var spriteOffset = i * 16;
 
                             int spritePaletteOffset = 0;
-                            for (int bytePairIndex = 0; bytePairIndex < (sheet.EightBySixteen ? 2 : 1); bytePairIndex++)
+                            for (int bytePairByteIndex = 0; bytePairByteIndex < 8; bytePairByteIndex++)
                             {
-                                for (int bytePairByteIndex = 0; bytePairByteIndex < 8; bytePairByteIndex++)
+                                byte panel1Byte = 0x0, panel2Byte = 0x0;
+                                int byteOffset = bytePairByteIndex + 16;
+
+                                for (int bytePairBitIndex = 0; bytePairBitIndex < 8; bytePairBitIndex++, spritePaletteOffset++)
                                 {
-                                    byte panel1Byte = 0x0, panel2Byte = 0x0;
-                                    int byteOffset = bytePairByteIndex + (bytePairIndex * 16);
+                                    // palette index for that pixel. 
+                                    int paletteIndex = spritePalette[spritePaletteOffset];
+                                    int panel2Bit = paletteIndex >> 1;
+                                    int panel1Bit = paletteIndex & 0x1;
 
-                                    for (int bytePairBitIndex = 0; bytePairBitIndex < 8; bytePairBitIndex++, spritePaletteOffset++)
-                                    {
-                                        // palette index for that pixel. 
-                                        int paletteIndex = spritePalette[spritePaletteOffset];
-                                        int panel2Bit = paletteIndex >> 1;
-                                        int panel1Bit = paletteIndex & 0x1;
-
-                                        panel1Byte |= (byte)(panel1Bit << (7 - bytePairBitIndex));
-                                        panel2Byte |= (byte)(panel2Bit << (7 - bytePairBitIndex));
-                                    }
-
-                                    entireGame[fileOffset + spriteOffset + byteOffset] = panel1Byte;
-                                    entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] = panel2Byte;
+                                    panel1Byte |= (byte)(panel1Bit << (7 - bytePairBitIndex));
+                                    panel2Byte |= (byte)(panel2Bit << (7 - bytePairBitIndex));
                                 }
 
+                                entireGame[fileOffset + spriteOffset + byteOffset] = panel1Byte;
+                                entireGame[fileOffset + spriteOffset + byteOffset + Constants.SpriteSizeInBytes] = panel2Byte;
                             }
                         }
                     }
@@ -98,7 +94,7 @@ namespace Common
             });
         }
 
-        public async Task<List<SpriteSheet>> GetSpriteSheets(bool eightBySixteenMode)
+        public async Task<List<SpriteSheet>> GetSpriteSheets()
         {
             List<SpriteSheet> sheets = new List<SpriteSheet>();
 
@@ -123,12 +119,11 @@ namespace Common
                         var sheet = new SpriteSheet
                         {
                             FilePosition = filePointer,
-                            EightBySixteen = eightBySixteenMode,
                             SheetNumber = tileNumber,
                             Height = 128,
                             Width = 128,
                             Sprites = new List<ISprite>(),
-                            SpriteHeight = eightBySixteenMode ? 16 : 8,
+                            SpriteHeight = 8,
                             SpriteWidth = 8,
                         };
 
@@ -172,25 +167,7 @@ namespace Common
                                 curSprite.SheetNumber = tileNumber;
                                 curSprite.SpriteIndex = spriteIndex;
 
-                                if (eightBySixteenMode)
-                                {
-                                    if (prevSprite == null)
-                                    {
-                                        prevSprite = curSprite;
-                                    }
-                                    else
-                                    {
-                                        var compositeSprite = CompositeSprite.Create([prevSprite, curSprite], SpriteOrientationEnum.Vertical);
-                                        compositeSprite.SheetNumber = tileNumber;
-                                        compositeSprite.SpriteIndex = spriteIndex / 2;
-                                        sheet.Sprites.Add(compositeSprite);
-                                        prevSprite = null;
-                                    }
-                                }
-                                else
-                                {
-                                    sheet.Sprites.Add(curSprite);
-                                }
+                                sheet.Sprites.Add(curSprite);
                             }
                         }
                     }
