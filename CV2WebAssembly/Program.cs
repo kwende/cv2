@@ -1,3 +1,4 @@
+using CV2WebAssembly.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -22,6 +23,7 @@ namespace CV2WebAssembly
             Log.Information("Hello, browser!");
             Log.Warning("Received strange response {@Response} from server", new { Username = "example", Cats = 7 });
 
+			builder.Services.AddScoped<PresetClient>(); 
             builder.Services.AddMudServices();
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");

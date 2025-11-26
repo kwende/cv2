@@ -2,12 +2,15 @@
 
 @inject ILogger<Home> _logger;
 @inject IJSRuntime _jsRuntime;
+@inject PresetClient _presetClient; 
 
 @page "/sprite-editor"
+@using CV2WebAssembly.Services
 @using Common
 @using MudBlazor
 @using CV2WebAssembly.Pages
 @using Serilog
+
 
 <MudAppBar Color="Color.Primary" Elevation="1">
 	<MudText Typo="Typo.h6">NES Sprite Editor</MudText>
@@ -231,6 +234,11 @@
 		Slot1NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[0]);
 		Slot2NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[1]);
 		Slot3NesColor = NesColorsUtils.NesColorIndexToNesColor(palette[2]);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		var contnet = await _presetClient.LoadPreset("cv2-simon-presets"); 
 	}
 
 	protected async Task OnSpriteSaved(ISprite sprite)
