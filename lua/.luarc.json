@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.1",
+  "workspace.library": [
+    "./fceux-stubs"
+  ],
+  "diagnostics.globals": [
+    "emu", "memory", "joypad", "gui", "input", "rom", "ppu", "debugger", "sound", "taseditor",
+    "AND", "OR", "XOR", "BIT"
+  ]
+}

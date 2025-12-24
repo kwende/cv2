@@ -13,11 +13,17 @@ namespace CV2WebAssembly.Services
 			_client = client;
 		}
 
-		public async Task<string> LoadPreset(string presetName)
+		public async Task<Preset> LoadPreset(string presetName)
 		{
-			var response = await _client.GetFromJsonAsync<Preset>($"presets/{presetName}.json");
-
-			return ""; 
+			var result = await _client.GetFromJsonAsync<Preset>($"presets/{presetName}.json");
+			if(result == null)
+			{
+				throw new HttpRequestException($"Preset '{presetName}' not found.", null, System.Net.HttpStatusCode.NotFound);
+			}
+			else
+			{
+				return result;
+			}
 		}
     }
 }
